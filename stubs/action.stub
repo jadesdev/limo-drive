@@ -1,0 +1,12 @@
+<?php
+
+namespace {{ namespace }};
+use Illuminate\Support\Facades\DB;
+
+class {{ class }}
+{
+    public function handle($request)
+    {
+        // Your logic here
+    }
+}

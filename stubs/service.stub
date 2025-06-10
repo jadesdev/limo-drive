@@ -1,0 +1,9 @@
+<?php
+
+namespace {{ namespace }};
+use Illuminate\Support\Facades\DB;
+
+class {{ class }}
+{
+    
+}
