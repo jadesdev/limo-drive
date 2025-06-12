@@ -34,7 +34,7 @@ class ServiceController extends Controller
     {
         if (Str::isUuid($slug)) {
             $service = Service::where('id', $slug)->firstOrFail();
-        }else{
+        } else {
             $service = Service::where('slug', $slug)->firstOrFail();
         }
         return response()->json([
