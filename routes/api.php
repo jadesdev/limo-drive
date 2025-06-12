@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -13,3 +14,9 @@ Route::controller(ServiceController::class)->prefix('services')->group(function 
     Route::get('/', 'index');
     Route::get('/{slug}', 'show');
 });
+
+Route::controller(FleetController::class)->prefix('fleets')->group(function () {
+    Route::get('/', 'index');
+    Route::get('/{slug}', 'show');
+});
+
