@@ -22710,6 +22710,125 @@ namespace Illuminate\Support\Facades {
             }
     }
 
+namespace Stevebauman\Purify\Facades {
+    /**
+     * 
+     *
+     * @method static \HTMLPurifier              getPurifier()
+     * @method static array|string               clean(array|string $input)
+     */
+    class Purify {
+        /**
+         * Convenience alias for driver().
+         *
+         * @param string|array|null $config
+         * @return \Purify 
+         * @throws \InvalidArgumentException
+         * @static 
+         */
+        public static function config($config = null)
+        {
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->config($config);
+        }
+
+        /**
+         * Get the default driver name.
+         *
+         * @return string 
+         * @static 
+         */
+        public static function getDefaultDriver()
+        {
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->getDefaultDriver();
+        }
+
+        /**
+         * Get a driver instance.
+         *
+         * @param string|array|null $driver
+         * @return \Purify 
+         * @throws \InvalidArgumentException
+         * @static 
+         */
+        public static function driver($driver = null)
+        {
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->driver($driver);
+        }
+
+        /**
+         * Register a custom driver creator Closure.
+         *
+         * @param string $driver
+         * @param \Closure $callback
+         * @return \Stevebauman\Purify\PurifyManager 
+         * @static 
+         */
+        public static function extend($driver, $callback)
+        {
+            //Method inherited from \Illuminate\Support\Manager 
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->extend($driver, $callback);
+        }
+
+        /**
+         * Get all of the created "drivers".
+         *
+         * @return array 
+         * @static 
+         */
+        public static function getDrivers()
+        {
+            //Method inherited from \Illuminate\Support\Manager 
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->getDrivers();
+        }
+
+        /**
+         * Get the container instance used by the manager.
+         *
+         * @return \Illuminate\Contracts\Container\Container 
+         * @static 
+         */
+        public static function getContainer()
+        {
+            //Method inherited from \Illuminate\Support\Manager 
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->getContainer();
+        }
+
+        /**
+         * Set the container instance used by the manager.
+         *
+         * @param \Illuminate\Contracts\Container\Container $container
+         * @return \Stevebauman\Purify\PurifyManager 
+         * @static 
+         */
+        public static function setContainer($container)
+        {
+            //Method inherited from \Illuminate\Support\Manager 
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->setContainer($container);
+        }
+
+        /**
+         * Forget all of the resolved driver instances.
+         *
+         * @return \Stevebauman\Purify\PurifyManager 
+         * @static 
+         */
+        public static function forgetDrivers()
+        {
+            //Method inherited from \Illuminate\Support\Manager 
+            /** @var \Stevebauman\Purify\PurifyManager $instance */
+            return $instance->forgetDrivers();
+        }
+
+            }
+    }
+
 namespace Illuminate\Http {
     /**
      * 
@@ -27597,6 +27716,7 @@ namespace  {
     class Validator extends \Illuminate\Support\Facades\Validator {}
     class View extends \Illuminate\Support\Facades\View {}
     class Vite extends \Illuminate\Support\Facades\Vite {}
+    class Purify extends \Stevebauman\Purify\Facades\Purify {}
 }
 
 
