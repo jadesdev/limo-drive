@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
@@ -23,3 +24,6 @@ Route::controller(FleetController::class)->prefix('fleets')->group(function () {
 
 // Contact message
 Route::post('/contact', [ContactController::class, 'store'])->middleware(['throttle:6,1']);
+
+// Faqs
+Route::get('/faqs', [FaqController::class, 'index']);
