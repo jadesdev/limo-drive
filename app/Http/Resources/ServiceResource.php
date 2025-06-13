@@ -32,11 +32,11 @@ class ServiceResource extends JsonResource
         ];
     }
 
-    public function formatAttributes(array|null $attributes):array
+    public function formatAttributes(?array $attributes): array
     {
         if (empty($attributes)) {
             return [];
-        }   
+        }
 
         return array_map(function ($attribute) {
             return [
