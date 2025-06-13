@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreFleetRequest;
+use App\Http\Requests\UpdateFleetRequest;
 use App\Http\Resources\FleetResource;
 use App\Models\Fleet;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Storage;
 
 class FleetController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Fetch all fleets
      *
@@ -18,11 +24,7 @@ class FleetController extends Controller
     {
         $fleets = Fleet::active()->orderBy('order', 'asc')->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'All Fleets',
-            'data' => FleetResource::collection($fleets),
-        ]);
+        return $this->dataResponse('All Fleets', FleetResource::collection($fleets));
     }
 
     /**
@@ -38,10 +40,164 @@ class FleetController extends Controller
             $fleet = Fleet::where('slug', $slug)->firstOrFail();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Fleet Details',
-            'data' => FleetResource::make($fleet),
+        return $this->dataResponse('Fleet Details', FleetResource::make($fleet));
+    }
+
+    /**
+     * Fetch all fleets (Admin)
+     */
+    public function adminIndex(Request $request)
+    {
+        $fleets = Fleet::orderBy('order', 'asc')->get();
+
+        return $this->dataResponse('All Fleets', FleetResource::collection($fleets));
+    }
+
+    /**
+     * Vehicle Details
+     */
+    public function adminShow(Fleet $fleet)
+    {
+        return $this->dataResponse('Fleet Details', FleetResource::make($fleet));
+    }
+
+    /**
+     * Add new fleet
+     */
+    public function store(StoreFleetRequest $request)
+    {
+        $validated = $request->validated();
+
+        // Generate slug from name if not provided
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        // Handle thumbnail upload
+        if ($request->hasFile('thumbnail')) {
+            $validated['thumbnail'] = $this->uploadFile($request->file('thumbnail'), 'fleets');
+        }
+
+        // Handle multiple images upload
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $imagePaths[] = $this->uploadFile($image, 'fleets');
+            }
+            $validated['images'] = $imagePaths;
+        }
+
+        // Set order if not provided (next highest order)
+        if (empty($validated['order'])) {
+            $validated['order'] = Fleet::max('order') + 1;
+        }
+
+        $fleet = Fleet::create($validated);
+
+        return $this->dataResponse('Fleet created successfully', FleetResource::make($fleet), 201);
+    }
+
+    /**
+     * Update fleet
+     */
+    public function update(UpdateFleetRequest $request, Fleet $fleet)
+    {
+        $validated = $request->validated();
+
+        // Update slug if name changed
+        if (isset($validated['name']) && $validated['name'] !== $fleet->name) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        // Handle thumbnail upload
+        if ($request->hasFile('thumbnail')) {
+            // Delete old thumbnail
+            if ($fleet->thumbnail) {
+                Storage::disk('uploads')->delete($fleet->thumbnail);
+            }
+            $validated['thumbnail'] = $this->uploadFile($request->file('thumbnail'), 'fleets');
+        }
+
+        // Handle multiple images upload
+        if ($request->hasFile('images')) {
+            // Delete old images
+            if (is_array($fleet->images)) {
+                foreach ($fleet->images as $oldImage) {
+                    Storage::disk('uploads')->delete($oldImage);
+                }
+            }
+
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $imagePaths[] = $this->uploadFile($image, 'fleets');
+            }
+            $validated['images'] = $imagePaths;
+        }
+
+        $fleet->update($validated);
+
+        return $this->dataResponse('Fleet updated successfully', FleetResource::make($fleet->fresh()));
+    }
+
+    /**
+     * Remove the specified fleet
+     */
+    public function destroy(Fleet $fleet)
+    {
+        // Delete associated files
+        if ($fleet->thumbnail) {
+            Storage::disk('uploads')->delete($fleet->thumbnail);
+        }
+
+        if (is_array($fleet->images)) {
+            foreach ($fleet->images as $image) {
+                Storage::disk('uploads')->delete($image);
+            }
+        }
+
+        $fleet->delete();
+
+        return $this->successResponse('Fleet deleted successfully');
+    }
+
+    /**
+     * Helper method to upload files
+     */
+    private function uploadFile($file, $directory = 'fleets')
+    {
+        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs($directory, $filename, 'uploads');
+
+        return $path;
+    }
+
+    /**
+     * Reorder fleets
+     */
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'fleets' => 'required|array',
+            'fleets.*.id' => 'required|exists:fleets,id',
+            'fleets.*.order' => 'required|integer|min:1',
         ]);
+
+        foreach ($request->fleets as $fleetData) {
+            Fleet::where('id', $fleetData['id'])->update(['order' => $fleetData['order']]);
+        }
+
+        return $this->successResponse('Fleet order updated successfully');
+    }
+
+    /**
+     * Toggle fleet active status
+     */
+    public function toggleStatus(Fleet $fleet)
+    {
+        $fleet->update(['is_active' => ! $fleet->is_active]);
+
+        $status = $fleet->is_active ? 'activated' : 'deactivated';
+
+        return $this->dataResponse("Fleet {$status} successfully", FleetResource::make($fleet));
     }
 }
