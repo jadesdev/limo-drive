@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Traits\ApiResponse;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\JsonResponse;
 
 #[Group('Admin Profile')]
 class ProfileController extends Controller

@@ -6,7 +6,6 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes

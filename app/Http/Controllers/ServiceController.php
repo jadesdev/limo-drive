@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
 use App\Http\Resources\ServiceResource;
 use App\Models\Service;
+use App\Traits\ApiResponse;
+use App\Traits\ServiceTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
+    use ServiceTrait;
+    use ApiResponse;
     /**
      * Fetch all services
      *
@@ -18,11 +24,7 @@ class ServiceController extends Controller
     {
         $services = Service::active()->orderBy('order', 'asc')->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'All Services',
-            'data' => ServiceResource::collection($services),
-        ]);
+        return $this->dataResponse('All Services', ServiceResource::collection($services));
     }
 
     /**
@@ -38,10 +40,88 @@ class ServiceController extends Controller
             $service = Service::where('slug', $slug)->firstOrFail();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Service Details',
-            'data' => ServiceResource::make($service),
-        ]);
+        return $this->dataResponse('Service Details', ServiceResource::make($service));
+    }
+
+    /**
+     * Fetch all services (Admin)
+     */
+    public function adminIndex(Request $request)
+    {
+        $search = $request->input('search', '');
+
+        $query = Service::orderBy('order', 'asc');
+
+        if ($search) {
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('slug', 'like', '%' . $search . '%')
+                ->orWhere('description', 'like', '%' . $search . '%');
+        }
+
+        $services = $query->get();
+
+        return $this->dataResponse('All Services', ServiceResource::collection($services));
+    }
+
+    /**
+     * Service Deetails (Admin)
+     */
+    public function adminShow(Service $service)
+    {
+        return $this->dataResponse('Service Details', ServiceResource::make($service));
+    }
+
+    /**
+     * Store a new service (Admin)
+     */
+    public function store(ServiceRequest $request)
+    {
+        $validated = $request->validated();
+
+        $validated['slug'] = Str::slug($validated['name']);
+
+        // Handle banner image
+        if ($request->hasFile('banner_image')) {
+            $validated['banner_image'] = $this->handleImageUpload(
+                $request->file('banner_image'),
+                'banner-' . $validated['slug']
+            );
+        }
+        $validated = $this->handleAttributeImages($request, $validated);
+
+        $service = Service::create($validated);
+
+
+        return $this->dataResponse('Service created successfully', ServiceResource::make($service));
+    }
+
+    /**
+     * Update service (Admin)
+     */
+    public function update(UpdateServiceRequest $request, Service $service)
+    {
+        $validated = $request->validated();
+
+        $validated['slug'] = Str::slug($validated['name']);
+
+        // Handle banner image
+        $this->handleBannerImageUpdate($request, $validated, $service);
+        $validated = $this->handleAttributeImagesUpdate($request, $validated, $service);
+
+        $service->update($validated);
+
+        return $this->dataResponse('Service updated successfully', ServiceResource::make($service));
+    }
+
+    /**
+     * Delete service (Admin)
+     */
+    public function destroy(Service $service)
+    {
+        $this->deleteServiceImages($service);
+
+        // $service->delete();
+
+        return $this->successResponse('Service deleted successfully');
     }
 }
