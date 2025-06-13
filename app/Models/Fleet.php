@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Storage;
 
 class Fleet extends Model
@@ -45,7 +44,7 @@ class Fleet extends Model
         'bags' => 'integer',
     ];
 
-    function scopeActive($query)
+    public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
@@ -55,6 +54,7 @@ class Fleet extends Model
         if ($this->thumbnail) {
             return Storage::disk('uploads')->url($this->thumbnail);
         }
+
         return null;
     }
 
@@ -65,6 +65,7 @@ class Fleet extends Model
                 return $imagePath ? Storage::disk('uploads')->url($imagePath) : null;
             }, $this->images);
         }
+
         return null;
     }
 }

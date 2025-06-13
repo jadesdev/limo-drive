@@ -15,14 +15,14 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug')->unique()->index();
-            $table->string('banner_image')->nullable();         
+            $table->string('banner_image')->nullable();
             $table->text('description')->nullable();
-            $table->text('short_description')->nullable();   
+            $table->text('short_description')->nullable();
             $table->json('attributes')->nullable();
             $table->json('features')->nullable();
             $table->json('technologies')->nullable();
-            $table->boolean('is_active')->default(true)->index();        
-            $table->integer('order')->default(0)->index(); 
+            $table->boolean('is_active')->default(true)->index();
+            $table->integer('order')->default(0)->index();
             $table->timestamps();
         });
     }

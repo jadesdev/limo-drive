@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Service;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Str;
 
@@ -24,18 +23,18 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_airport.jpg',
                         'title' => 'Problem Solved: Airport Commute Hassles',
-                        'description' => 'No more worrying about airport parking, navigating traffic, or the unreliability of other ride options. We provide punctual, door-to-door service tailored to your flight schedule.'
+                        'description' => 'No more worrying about airport parking, navigating traffic, or the unreliability of other ride options. We provide punctual, door-to-door service tailored to your flight schedule.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_airport.jpg',
                         'title' => 'Ideal For: All Travelers',
-                        'description' => 'Business travelers requiring punctuality, families needing space and comfort, tourists seeking a smooth start to their vacation, and anyone valuing a dependable, high-quality airport transfer experience.'
+                        'description' => 'Business travelers requiring punctuality, families needing space and comfort, tourists seeking a smooth start to their vacation, and anyone valuing a dependable, high-quality airport transfer experience.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_airport.jpg',
                         'title' => 'Your Benefits: Comfort & Peace of Mind',
-                        'description' => 'Enjoy on-time arrivals with real-time flight tracking, professional meet-and-greet service, assistance with luggage, and a fleet of clean, comfortable vehicles suited to your needs.'
-                    ]
+                        'description' => 'Enjoy on-time arrivals with real-time flight tracking, professional meet-and-greet service, assistance with luggage, and a fleet of clean, comfortable vehicles suited to your needs.',
+                    ],
                 ],
                 'features' => [
                     'Flight Tracking & Adjusted Pickup Times',
@@ -62,28 +61,28 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_corporate.jpg',
                         'title' => 'Problem Solved: Executive Transport Challenges',
-                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.'
+                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_corporate.jpg',
                         'title' => 'Ideal For: Businesses & Executives',
-                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.'
+                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_corporate.jpg',
                         'title' => 'Your Benefits: Efficiency & Professionalism',
-                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.'
-                    ]
+                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.',
+                    ],
                 ],
                 'features' => [
                     'Discreet & Professional Chauffeurs',
                     'On-Time Guarantee for Meetings',
                     'Wi-Fi Equipped Vehicles (on request)',
-                    'Monthly Invoicing for Corporate Accounts'
+                    'Monthly Invoicing for Corporate Accounts',
                 ],
                 'technologies' => [
                     'GPS Fleet Management',
-                    'Corporate Account Portal'
+                    'Corporate Account Portal',
                 ],
                 'is_active' => true,
                 'order' => 2,
@@ -97,28 +96,28 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_prom.jpg',
                         'title' => 'Problem Solved: Executive Transport Challenges',
-                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.'
+                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_prom.jpg',
                         'title' => 'Ideal For: Businesses & Executives',
-                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.'
+                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_prom.jpg',
                         'title' => 'Your Benefits: Efficiency & Professionalism',
-                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.'
-                    ]
+                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.',
+                    ],
                 ],
                 'features' => [
                     'Discreet & Professional Chauffeurs',
                     'On-Time Guarantee for Meetings',
                     'Wi-Fi Equipped Vehicles (on request)',
-                    'Monthly Invoicing for Corporate Accounts'
+                    'Monthly Invoicing for Corporate Accounts',
                 ],
                 'technologies' => [
                     'GPS Fleet Management',
-                    'Corporate Account Portal'
+                    'Corporate Account Portal',
                 ],
                 'is_active' => true,
                 'order' => 3,
@@ -132,28 +131,28 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_chauffeur.jpg',
                         'title' => 'Problem Solved: Executive Transport Challenges',
-                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.'
+                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_chauffeur.jpg',
                         'title' => 'Ideal For: Businesses & Executives',
-                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.'
+                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_chauffeur.jpg',
                         'title' => 'Your Benefits: Efficiency & Professionalism',
-                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.'
-                    ]
+                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.',
+                    ],
                 ],
                 'features' => [
                     'Discreet & Professional Chauffeurs',
                     'On-Time Guarantee for Meetings',
                     'Wi-Fi Equipped Vehicles (on request)',
-                    'Monthly Invoicing for Corporate Accounts'
+                    'Monthly Invoicing for Corporate Accounts',
                 ],
                 'technologies' => [
                     'GPS Fleet Management',
-                    'Corporate Account Portal'
+                    'Corporate Account Portal',
                 ],
                 'is_active' => true,
                 'order' => 4,
@@ -167,28 +166,28 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_concert.jpg',
                         'title' => 'Problem Solved: Executive Transport Challenges',
-                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.'
+                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_concert.jpg',
                         'title' => 'Ideal For: Businesses & Executives',
-                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.'
+                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_concert.jpg',
                         'title' => 'Your Benefits: Efficiency & Professionalism',
-                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.'
-                    ]
+                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.',
+                    ],
                 ],
                 'features' => [
                     'Discreet & Professional Chauffeurs',
                     'On-Time Guarantee for Meetings',
                     'Wi-Fi Equipped Vehicles (on request)',
-                    'Monthly Invoicing for Corporate Accounts'
+                    'Monthly Invoicing for Corporate Accounts',
                 ],
                 'technologies' => [
                     'GPS Fleet Management',
-                    'Corporate Account Portal'
+                    'Corporate Account Portal',
                 ],
                 'is_active' => true,
                 'order' => 5,
@@ -202,38 +201,38 @@ class ServiceSeeder extends Seeder
                     'problem_solved' => [
                         'image_path' => 'images/services/problem_solved_black_car.jpg',
                         'title' => 'Problem Solved: Executive Transport Challenges',
-                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.'
+                        'description' => 'Eliminate concerns about transport logistics for important meetings, client pickups, or executive travel. We provide seamless, timely, and confidential services.',
                     ],
                     'target_audience' => [
                         'image_path' => 'images/services/target_audience_black_car.jpg',
                         'title' => 'Ideal For: Businesses & Executives',
-                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.'
+                        'description' => 'Executives, corporate clients, event planners, and businesses looking for premium, reliable transportation solutions that reflect their company\'s image.',
                     ],
                     'client_benefits' => [
                         'image_path' => 'images/services/client_benefits_black_car.jpg',
                         'title' => 'Your Benefits: Efficiency & Professionalism',
-                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.'
-                    ]
+                        'description' => 'Punctual service, discreet chauffeurs, comfortable and well-maintained vehicles, and flexible booking options to meet demanding corporate schedules.',
+                    ],
                 ],
                 'features' => [
                     'Discreet & Professional Chauffeurs',
                     'On-Time Guarantee for Meetings',
                     'Wi-Fi Equipped Vehicles (on request)',
-                    'Monthly Invoicing for Corporate Accounts'
+                    'Monthly Invoicing for Corporate Accounts',
                 ],
                 'technologies' => [
                     'GPS Fleet Management',
-                    'Corporate Account Portal'
+                    'Corporate Account Portal',
                 ],
                 'is_active' => true,
                 'order' => 6,
-            ]
+            ],
         ];
 
         foreach ($servicesData as $service) {
             $service['slug'] = Str::slug($service['name']);
 
-            Service::create($service); 
+            Service::create($service);
         }
     }
 }

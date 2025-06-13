@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ContactFormRequest;
 use App\Models\ContactMessage;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Stevebauman\Purify\Facades\Purify;
 
 class ContactController extends Controller
@@ -22,7 +21,7 @@ class ContactController extends Controller
         $validated = Purify::clean($request->validated());
         $contactMessage = ContactMessage::create($validated);
         // Send email to admin
-        
+
         return $this->successResponse('Contact message sent successfully');
     }
 }

@@ -9,39 +9,39 @@ use Illuminate\Support\Str;
 
 class FleetController extends Controller
 {
-
     /**
      * Fetch all fleets
-     * 
+     *
      * @unauthenticated
      */
-    function index(Request $request)
+    public function index(Request $request)
     {
         $fleets = Fleet::active()->orderBy('order', 'asc')->get();
+
         return response()->json([
             'success' => true,
             'message' => 'All Fleets',
-            'data' => FleetResource::collection($fleets)
+            'data' => FleetResource::collection($fleets),
         ]);
     }
 
-
     /**
      * Fetch a fleet by slug or id
-     * 
+     *
      * @unauthenticated
      */
-    function show($slug)
+    public function show($slug)
     {
         if (Str::isUuid($slug)) {
             $fleet = Fleet::where('id', $slug)->firstOrFail();
         } else {
             $fleet = Fleet::where('slug', $slug)->firstOrFail();
         }
+
         return response()->json([
             'success' => true,
             'message' => 'Fleet Details',
-            'data' => FleetResource::make($fleet)
+            'data' => FleetResource::make($fleet),
         ]);
     }
 }

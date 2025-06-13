@@ -15,7 +15,7 @@ class FaqSeeder extends Seeder
         $faqsData = [
             [
                 'question' => 'What types of vehicles does Ikenga Limo offer?',
-                'answer' => "<p>Ikenga Limo offers a luxury fleet including:</p><ul><li>3 Ford Expedition Max (Black)</li><li>2 Chevrolet Suburban (Black)</li><li>2 Lincoln Navigator (Black)</li><li>2 Cadillac XT6</li><li>1 Cadillac Limo</li><li>1 BMW X7 Series</li></ul>",
+                'answer' => '<p>Ikenga Limo offers a luxury fleet including:</p><ul><li>3 Ford Expedition Max (Black)</li><li>2 Chevrolet Suburban (Black)</li><li>2 Lincoln Navigator (Black)</li><li>2 Cadillac XT6</li><li>1 Cadillac Limo</li><li>1 BMW X7 Series</li></ul>',
                 'is_active' => true,
                 'order' => 1,
             ],

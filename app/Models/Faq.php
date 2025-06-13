@@ -31,7 +31,8 @@ class Faq extends Model
         'order' => 'integer',
     ];
 
-    public function scopeActive($query){
+    public function scopeActive($query)
+    {
         return $query->where('is_active', true);
     }
 }
