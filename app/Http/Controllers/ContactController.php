@@ -31,7 +31,6 @@ class ContactController extends Controller
 
     /**
      * Fetch all contact messages
-     *
      */
     public function adminIndex(Request $request)
     {
@@ -50,7 +49,6 @@ class ContactController extends Controller
 
     /**
      * Fetch a contact message by id
-     *
      */
     public function adminShow(ContactMessage $contact)
     {
@@ -59,7 +57,6 @@ class ContactController extends Controller
 
     /**
      * Delete a contact message
-     *
      */
     public function destroy(ContactMessage $contact)
     {

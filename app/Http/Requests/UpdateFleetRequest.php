@@ -30,7 +30,7 @@ class UpdateFleetRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('fleets', 'slug')->ignore($fleetId)
+                Rule::unique('fleets', 'slug')->ignore($fleetId),
             ],
             'description' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',

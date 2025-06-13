@@ -6,14 +6,15 @@ use App\Http\Requests\StoreFleetRequest;
 use App\Http\Requests\UpdateFleetRequest;
 use App\Http\Resources\FleetResource;
 use App\Models\Fleet;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Traits\ApiResponse;
 use Storage;
 
 class FleetController extends Controller
 {
     use ApiResponse;
+
     /**
      * Fetch all fleets
      *
@@ -178,7 +179,7 @@ class FleetController extends Controller
         $request->validate([
             'fleets' => 'required|array',
             'fleets.*.id' => 'required|exists:fleets,id',
-            'fleets.*.order' => 'required|integer|min:1'
+            'fleets.*.order' => 'required|integer|min:1',
         ]);
 
         foreach ($request->fleets as $fleetData) {
@@ -193,7 +194,7 @@ class FleetController extends Controller
      */
     public function toggleStatus(Fleet $fleet)
     {
-        $fleet->update(['is_active' => !$fleet->is_active]);
+        $fleet->update(['is_active' => ! $fleet->is_active]);
 
         $status = $fleet->is_active ? 'activated' : 'deactivated';
 

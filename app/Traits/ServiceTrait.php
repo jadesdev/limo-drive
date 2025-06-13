@@ -31,6 +31,7 @@ trait ServiceTrait
                 Storage::disk('uploads')->delete('services/' . $service->banner_image);
             }
             $validated['banner_image'] = null;
+
             return;
         }
 
@@ -56,7 +57,7 @@ trait ServiceTrait
         $attributeImages = [
             'problem_solved' => 'problem-solved',
             'target_audience' => 'target-audience',
-            'client_benefits' => 'client-benefits'
+            'client_benefits' => 'client-benefits',
         ];
 
         foreach ($attributeImages as $attribute => $prefix) {
@@ -69,10 +70,10 @@ trait ServiceTrait
                 );
 
                 // Set the filename in the nested array structure
-                if (!isset($validated['attributes'])) {
+                if (! isset($validated['attributes'])) {
                     $validated['attributes'] = [];
                 }
-                if (!isset($validated['attributes'][$attribute])) {
+                if (! isset($validated['attributes'][$attribute])) {
                     $validated['attributes'][$attribute] = [];
                 }
                 $validated['attributes'][$attribute]['image'] = $filename;
@@ -90,7 +91,7 @@ trait ServiceTrait
         $attributeImages = [
             'problem_solved' => 'problem-solved',
             'target_audience' => 'target-audience',
-            'client_benefits' => 'client-benefits'
+            'client_benefits' => 'client-benefits',
         ];
 
         foreach ($attributeImages as $attribute => $prefix) {
@@ -110,10 +111,10 @@ trait ServiceTrait
                 );
 
                 // Set the filename in the nested array structure
-                if (!isset($validated['attributes'])) {
+                if (! isset($validated['attributes'])) {
                     $validated['attributes'] = $service->attributes ?? [];
                 }
-                if (!isset($validated['attributes'][$attribute])) {
+                if (! isset($validated['attributes'][$attribute])) {
                     $validated['attributes'][$attribute] = $service->attributes[$attribute] ?? [];
                 }
                 $validated['attributes'][$attribute]['image'] = $filename;
@@ -141,6 +142,6 @@ trait ServiceTrait
                 }
             }
         }
-        
+
     }
 }

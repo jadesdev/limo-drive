@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\FaqResource;
 use App\Models\Faq;
-use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 
 class FaqController extends Controller
 {
     use ApiResponse;
+
     /**
      * Get all active faqs
      *
@@ -111,7 +112,7 @@ class FaqController extends Controller
      */
     public function toggleStatus(Faq $faq)
     {
-        $faq->update(['is_active' => !$faq->is_active]);
+        $faq->update(['is_active' => ! $faq->is_active]);
 
         $status = $faq->is_active ? 'activated' : 'deactivated';
 

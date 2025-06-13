@@ -23,12 +23,13 @@ class UpdateServiceRequest extends FormRequest
     public function rules(): array
     {
         $serviceId = $this->route('service')?->id;
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('services', 'name')->ignore($serviceId)
+                Rule::unique('services', 'name')->ignore($serviceId),
             ],
             // Images are optional on update - only validate if provided
             'banner_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
@@ -62,6 +63,7 @@ class UpdateServiceRequest extends FormRequest
             'is_active' => 'sometimes|boolean',
         ];
     }
+
     /**
      * Get custom messages for validator errors.
      */
@@ -89,13 +91,13 @@ class UpdateServiceRequest extends FormRequest
         // Convert comma-separated strings to arrays if needed
         if ($this->has('features') && is_string($this->features)) {
             $this->merge([
-                'features' => array_filter(explode(',', $this->features))
+                'features' => array_filter(explode(',', $this->features)),
             ]);
         }
 
         if ($this->has('technologies') && is_string($this->technologies)) {
             $this->merge([
-                'technologies' => array_filter(explode(',', $this->technologies))
+                'technologies' => array_filter(explode(',', $this->technologies)),
             ]);
         }
 

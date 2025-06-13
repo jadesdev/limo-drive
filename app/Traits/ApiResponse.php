@@ -34,7 +34,7 @@ trait ApiResponse
      * @param  array|Collection|AnonymousResourceCollection  $data
      * @param  string  $message
      */
-    protected function dataResponse($message = 'Request Successful', $data, $code = 200): JsonResponse
+    protected function dataResponse($message, $data, $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,
@@ -42,8 +42,6 @@ trait ApiResponse
             'data' => $data,
         ], $code);
     }
-
-
 
     /**
      * Send an error response.

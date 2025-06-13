@@ -13,8 +13,9 @@ use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
-    use ServiceTrait;
     use ApiResponse;
+    use ServiceTrait;
+
     /**
      * Fetch all services
      *
@@ -90,7 +91,6 @@ class ServiceController extends Controller
         $validated = $this->handleAttributeImages($request, $validated);
 
         $service = Service::create($validated);
-
 
         return $this->dataResponse('Service created successfully', ServiceResource::make($service));
     }

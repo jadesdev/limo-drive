@@ -77,13 +77,13 @@ class ServiceRequest extends FormRequest
         // Convert comma-separated strings to arrays if needed
         if ($this->has('features') && is_string($this->features)) {
             $this->merge([
-                'features' => array_filter(explode(',', $this->features))
+                'features' => array_filter(explode(',', $this->features)),
             ]);
         }
 
         if ($this->has('technologies') && is_string($this->technologies)) {
             $this->merge([
-                'technologies' => array_filter(explode(',', $this->technologies))
+                'technologies' => array_filter(explode(',', $this->technologies)),
             ]);
         }
     }
