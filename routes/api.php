@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
@@ -20,3 +21,5 @@ Route::controller(FleetController::class)->prefix('fleets')->group(function () {
     Route::get('/{slug}', 'show');
 });
 
+// Contact message
+Route::post('/contact', [ContactController::class, 'store'])->middleware(['throttle:6,1']);

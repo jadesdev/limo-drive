@@ -13,7 +13,8 @@
         "dedoc/scramble": "^0.12.22",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "stevebauman/purify": "^6.3"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.5",
