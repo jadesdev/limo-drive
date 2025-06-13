@@ -34,11 +34,15 @@ class ServiceResource extends JsonResource
 
     public function formatAttributes($attributes)
     {
+        if (! is_array($attributes)) {
+            return [];
+        }
+
         return array_map(function ($attribute) {
             return [
-                'image_path' => $attribute['image_path'] ? Storage::disk('uploads')->url($attribute['image_path']) : null,
-                'title' => $attribute['title'],
-                'description' => $attribute['description'],
+                'image_path' => (! empty($attribute['image_path'])) ? Storage::disk('uploads')->url($attribute['image_path']) : null,
+                'title' => $attribute['title'] ?? null,
+                'description' => $attribute['description'] ?? null,
             ];
         }, $attributes);
     }

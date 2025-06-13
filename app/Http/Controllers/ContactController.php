@@ -19,6 +19,8 @@ class ContactController extends Controller
     public function store(ContactFormRequest $request)
     {
         $validated = Purify::clean($request->validated());
+        $validated['ip_address'] = $request->ip();
+        $validated['user_agent'] = $request->userAgent();
         $contactMessage = ContactMessage::create($validated);
         // Send email to admin
 
