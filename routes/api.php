@@ -58,10 +58,12 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     Route::controller(FleetController::class)->prefix('fleets')->group(function () {
         Route::get('/', 'adminIndex');
-        Route::get('/{fleet}', 'show');
+        Route::get('/{fleet}', 'adminShow');
         Route::post('/', 'store');
-        Route::put('/{fleet}', 'update');
+        Route::post('/{fleet}', 'update');
         Route::delete('/{fleet}', 'destroy');
+        Route::patch('/reorder', 'reorder');
+        Route::patch('/{fleet}/toggle-status', 'toggleStatus');
     });
 
     Route::controller(FaqController::class)->prefix('faqs')->group(function () {
@@ -70,12 +72,12 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::post('/', 'store');
         Route::put('/{faq}', 'update');
         Route::delete('/{faq}', 'destroy');
+        Route::patch('/{faq}/toggle-status', 'toggleStatus');
     });
 
     Route::controller(ContactController::class)->prefix('contacts')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{contact}', 'adminShow');
-        Route::post('/', 'store');
         Route::put('/{contact}', 'update');
         Route::delete('/{contact}', 'destroy');
     });
