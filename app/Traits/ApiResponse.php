@@ -11,7 +11,7 @@ trait ApiResponse
     /**
      * Send a success response.
      *
-     * @param  array  $data
+     * @param  array|Collection|AnonymousResourceCollection  $data
      * @param  string  $message
      */
     protected function successResponse($message = 'Request Successful', $data = [], $code = 200): JsonResponse
@@ -26,6 +26,21 @@ trait ApiResponse
         }
 
         return response()->json($response, $code);
+    }
+
+    /**
+     * Send a data filled response.
+     *
+     * @param  array|Collection|AnonymousResourceCollection  $data
+     * @param  string  $message
+     */
+    protected function dataResponse($message, $data, $code = 200): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $code);
     }
 
     /**
