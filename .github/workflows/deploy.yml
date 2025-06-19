@@ -1,4 +1,4 @@
-name: Deploy School Wallet Backend
+name: Deploy Limo CUDR Backend
 
 on:
   push:
