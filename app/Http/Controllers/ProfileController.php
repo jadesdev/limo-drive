@@ -18,9 +18,9 @@ class ProfileController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        return response()->json([
-            'user' => $request->user(),
-        ], 200);
+        $user = $request->user();
+
+        return $this->dataResponse('User Details', $user);
     }
 
     /**

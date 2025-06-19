@@ -29,7 +29,7 @@ trait ApiResponse
     }
 
     /**
-     * Send a data filed response.
+     * Send a data filled response.
      *
      * @param  array|Collection|AnonymousResourceCollection  $data
      * @param  string  $message
