@@ -29,14 +29,33 @@ class ProfileController extends Controller
     public function update(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'first_name' => 'sometimes|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|max:255',
+            'phone' => 'sometimes|string|max:255',
+            'address' => 'sometimes|array',
         ]);
 
         $user = $request->user();
         $user->update($validated);
 
         return $this->successResponse('User updated successfully', $user);
+    }
+
+    /**
+     * Upload Image
+     */
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $user = $request->user();
+        $user->image = $request->file('image')->store('images', 'uploads');
+        $user->save();
+
+        return $this->successResponse('Image uploaded successfully', $user);
     }
 
     /**

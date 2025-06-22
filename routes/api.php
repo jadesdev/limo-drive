@@ -26,6 +26,7 @@ Route::prefix('profile')->controller(ProfileController::class)->middleware('auth
     Route::get('/', 'show');
     Route::put('/', 'update');
     Route::post('/password', 'passwordUpdate');
+    Route::post('/upload-image', 'uploadImage');
 });
 
 // Services
