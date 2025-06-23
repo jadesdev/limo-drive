@@ -22,7 +22,18 @@ class ServiceResource extends JsonResource
             'banner_image_url' => $this->banner_image ? Storage::disk('uploads')->url($this->banner_image) : null,
             'description' => $this->description,
             'short_description' => $this->short_description,
-            'attributes' => $this->formatAttributes($this->attributes),
+            'problem_solved' => [
+                'image_url' => $this->problem_solved_image ? Storage::disk('uploads')->url($this->problem_solved_image) : null,
+                'description' => $this->problem_solved_desc,
+            ],
+            'target_audience' => [
+                'image_url' => $this->target_audience_image ? Storage::disk('uploads')->url($this->target_audience_image) : null,
+                'description' => $this->target_audience_desc,
+            ],
+            'client_benefits' => [
+                'image_url' => $this->client_benefits_image ? Storage::disk('uploads')->url($this->client_benefits_image) : null,
+                'description' => $this->client_benefits_desc,
+            ],
             'features' => $this->features,
             'technologies' => $this->technologies,
             'is_active' => (bool) $this->is_active,
@@ -30,20 +41,5 @@ class ServiceResource extends JsonResource
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];
-    }
-
-    public function formatAttributes(?array $attributes): array
-    {
-        if (empty($attributes)) {
-            return [];
-        }
-
-        return array_map(function ($attribute) {
-            return [
-                'image_path' => (! empty($attribute['image_path'])) ? Storage::disk('uploads')->url($attribute['image_path']) : null,
-                'title' => $attribute['title'] ?? null,
-                'description' => $attribute['description'] ?? null,
-            ];
-        }, $attributes);
     }
 }

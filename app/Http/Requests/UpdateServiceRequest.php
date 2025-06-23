@@ -35,25 +35,18 @@ class UpdateServiceRequest extends FormRequest
             'banner_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'description' => 'required|string',
             'short_description' => 'nullable|string|max:500',
-            'attributes' => 'nullable|array',
-
-            // Problem Solved Section - all optional on update
-            'attributes.problem_solved' => 'sometimes|nullable|array',
-            'attributes.problem_solved.image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.problem_solved.title' => 'sometimes|nullable|string|max:255',
-            'attributes.problem_solved.description' => 'sometimes|nullable|string',
-
-            // Target Audience Section - all optional on update
-            'attributes.target_audience' => 'sometimes|nullable|array',
-            'attributes.target_audience.image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.target_audience.title' => 'sometimes|nullable|string|max:255',
-            'attributes.target_audience.description' => 'sometimes|nullable|string',
-
-            // Client Benefits Section - all optional on update
-            'attributes.client_benefits' => 'sometimes|nullable|array',
-            'attributes.client_benefits.image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.client_benefits.title' => 'sometimes|nullable|string|max:255',
-            'attributes.client_benefits.description' => 'sometimes|nullable|string',
+            
+            // Problem Solved Section
+            'problem_solved_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'problem_solved_desc' => 'sometimes|nullable|string',
+            
+            // Target Audience Section
+            'target_audience_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'target_audience_desc' => 'sometimes|nullable|string',
+            
+            // Client Benefits Section
+            'client_benefits_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'client_benefits_desc' => 'sometimes|nullable|string',
 
             'features' => 'sometimes|array',
             'features.*' => 'sometimes|string',

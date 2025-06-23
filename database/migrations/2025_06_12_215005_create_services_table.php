@@ -18,7 +18,12 @@ return new class extends Migration
             $table->string('banner_image')->nullable();
             $table->text('description')->nullable();
             $table->text('short_description')->nullable();
-            $table->json('attributes')->nullable();
+            $table->string('problem_solved_image')->nullable();
+            $table->string('problem_solved_desc')->nullable();
+            $table->string('target_audience_image')->nullable();
+            $table->string('target_audience_desc')->nullable();
+            $table->string('client_benefits_image')->nullable();
+            $table->string('client_benefits_desc')->nullable();
             $table->json('features')->nullable();
             $table->json('technologies')->nullable();
             $table->boolean('is_active')->default(true)->index();

@@ -20,7 +20,12 @@ class Service extends Model
         'banner_image',
         'description',
         'short_description',
-        'attributes',
+        'problem_solved_image',
+        'problem_solved_desc',
+        'target_audience_image',
+        'target_audience_desc',
+        'client_benefits_image',
+        'client_benefits_desc',
         'features',
         'technologies',
         'is_active',
@@ -33,7 +38,6 @@ class Service extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'attributes' => 'array',
         'features' => 'array',
         'technologies' => 'array',
         'is_active' => 'boolean',

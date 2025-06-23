@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ServiceAction;
 use App\Http\Requests\ServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
 use App\Http\Resources\ServiceResource;
@@ -15,6 +16,8 @@ class ServiceController extends Controller
 {
     use ApiResponse;
     use ServiceTrait;
+
+    public function __construct(protected ServiceAction $serviceAction) {}
 
     /**
      * Fetch all services
@@ -78,20 +81,7 @@ class ServiceController extends Controller
     public function store(ServiceRequest $request)
     {
         $validated = $request->validated();
-
-        $validated['slug'] = Str::slug($validated['name']);
-
-        // Handle banner image
-        if ($request->hasFile('banner_image')) {
-            $validated['banner_image'] = $this->handleImageUpload(
-                $request->file('banner_image'),
-                'banner-' . $validated['slug']
-            );
-        }
-        $validated = $this->handleAttributeImages($request, $validated);
-
-        $service = Service::create($validated);
-
+        $service = $this->serviceAction->create($validated);
         return $this->dataResponse('Service created successfully', ServiceResource::make($service));
     }
 
@@ -101,15 +91,7 @@ class ServiceController extends Controller
     public function update(UpdateServiceRequest $request, Service $service)
     {
         $validated = $request->validated();
-
-        $validated['slug'] = Str::slug($validated['name']);
-
-        // Handle banner image
-        $this->handleBannerImageUpdate($request, $validated, $service);
-        $validated = $this->handleAttributeImagesUpdate($request, $validated, $service);
-
-        $service->update($validated);
-
+        $service = $this->serviceAction->update($service, $validated);
         return $this->dataResponse('Service updated successfully', ServiceResource::make($service));
     }
 
@@ -120,7 +102,7 @@ class ServiceController extends Controller
     {
         $this->deleteServiceImages($service);
 
-        // $service->delete();
+        $service->delete();
 
         return $this->successResponse('Service deleted successfully');
     }

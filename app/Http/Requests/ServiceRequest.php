@@ -26,22 +26,18 @@ class ServiceRequest extends FormRequest
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'description' => 'required|string',
             'short_description' => 'nullable|string|max:500',
-            'attributes' => 'nullable|array',
-
-            'attributes.problem_solved' => 'nullable|array',
-            'attributes.problem_solved.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.problem_solved.title' => 'nullable|string|max:255',
-            'attributes.problem_solved.description' => 'nullable|string',
-
-            'attributes.target_audience' => 'nullable|array',
-            'attributes.target_audience.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.target_audience.title' => 'nullable|string|max:255',
-            'attributes.target_audience.description' => 'nullable|string',
-
-            'attributes.client_benefits' => 'nullable|array',
-            'attributes.client_benefits.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
-            'attributes.client_benefits.title' => 'nullable|string|max:255',
-            'attributes.client_benefits.description' => 'nullable|string',
+            
+            // Problem Solved Section
+            'problem_solved_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'problem_solved_desc' => 'nullable|string',
+            
+            // Target Audience Section
+            'target_audience_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'target_audience_desc' => 'nullable|string',
+            
+            // Client Benefits Section
+            'client_benefits_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'client_benefits_desc' => 'nullable|string',
 
             'features' => 'required|array',
             'features.*' => 'required|string',
