@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ProfileController;
@@ -49,6 +50,7 @@ Route::get('/faqs', [FaqController::class, 'index']);
 
 // Admin Routes
 Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    // Services
     Route::controller(ServiceController::class)->prefix('services')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{service}', 'adminShow');
@@ -57,6 +59,7 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::delete('/{service}', 'destroy');
     });
 
+    // Fleets
     Route::controller(FleetController::class)->prefix('fleets')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{fleet}', 'adminShow');
@@ -67,6 +70,7 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::patch('/{fleet}/toggle-status', 'toggleStatus');
     });
 
+    // Faqs
     Route::controller(FaqController::class)->prefix('faqs')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{faq}', 'adminShow');
@@ -76,9 +80,13 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::patch('/{faq}/toggle-status', 'toggleStatus');
     });
 
+    // Contacts
     Route::controller(ContactController::class)->prefix('contacts')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{contact}', 'adminShow');
         Route::delete('/{contact}', 'destroy');
     });
+
+    // Drivers
+    Route::apiResource('drivers', DriverController::class);
 });
