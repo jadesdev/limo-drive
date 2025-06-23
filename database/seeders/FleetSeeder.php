@@ -46,6 +46,10 @@ class FleetSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'order' => 1,
+                'base_rate' => 100,
+                'rate_per_km' => 0.5,
+                'rate_per_minute' => 0.1,
+                'minimum_hours' => 1,
             ],
             [
                 'name' => 'Mercedes-Benz S-Class',
@@ -74,6 +78,10 @@ class FleetSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'order' => 2,
+                'base_rate' => 150,
+                'rate_per_km' => 0.5,
+                'rate_per_minute' => 0.1,
+                'minimum_hours' => 1,
             ],
         ];
 
