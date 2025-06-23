@@ -12,6 +12,7 @@ use App\Models\Payment;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
+use Str;
 
 class StripeWebhookController extends Controller
 {
@@ -52,12 +53,12 @@ class StripeWebhookController extends Controller
     {
         $bookingId = $paymentIntent->metadata->booking_id ?? null;
         if (!$bookingId) {
-            return; 
+            return;
         }
 
         $booking = Booking::find($bookingId);
         if (!$booking) {
-            return; 
+            return;
         }
 
         if (Payment::where('gateway_ref', $paymentIntent->id)->exists()) {
@@ -65,14 +66,15 @@ class StripeWebhookController extends Controller
         }
 
         Payment::create([
+            'code' => 'PMT-' . strtoupper(Str::random(9)),
             'booking_id' => $booking->id,
             'customer_name' => $booking->customer_name,
             'customer_email' => $booking->customer_email,
             'gateway_name' => 'stripe',
             'gateway_ref' => $paymentIntent->id,
-            'amount' => $paymentIntent->amount / 100, 
+            'amount' => $paymentIntent->amount / 100,
             'currency' => $paymentIntent->currency,
-            'status' => $paymentIntent->status, 
+            'status' => $paymentIntent->status,
             'gateway_payload' => $paymentIntent->toArray(),
         ]);
 

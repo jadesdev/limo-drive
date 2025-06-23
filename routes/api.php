@@ -6,6 +6,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StripeWebhookController;
@@ -19,7 +20,6 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 // Protected auth routes
 Route::prefix('auth')->controller(AuthController::class)->middleware('auth:sanctum')->group(function () {
     Route::post('/logout', 'logout');
-    // Route::post('/logout-all', 'logoutAll');
     Route::get('/user', 'user');
     Route::post('/refresh-token', 'refreshToken');
 });
@@ -98,6 +98,9 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     // Drivers
     Route::apiResource('drivers', DriverController::class);
+
+    // Payments
+    Route::apiResource('payments', PaymentController::class);
 });
 
 // Stripe Webhook
