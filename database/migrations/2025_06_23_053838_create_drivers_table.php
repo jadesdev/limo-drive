@@ -29,7 +29,7 @@ return new class extends Migration
             $table->boolean('is_available')->default(true);
             $table->timestamp('last_online_at')->nullable();
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['status', 'is_available']);
             $table->index('email');

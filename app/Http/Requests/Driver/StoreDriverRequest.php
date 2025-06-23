@@ -29,7 +29,7 @@ class StoreDriverRequest extends FormRequest
             'email' => [
                 'required',
                 'email',
-                Rule::unique('drivers', 'email')
+                Rule::unique('drivers', 'email'),
             ],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',

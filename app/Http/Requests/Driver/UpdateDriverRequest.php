@@ -32,7 +32,7 @@ class UpdateDriverRequest extends FormRequest
                 'sometimes',
                 'required',
                 'email',
-                Rule::unique('drivers', 'email')->ignore($driverId)
+                Rule::unique('drivers', 'email')->ignore($driverId),
             ],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',

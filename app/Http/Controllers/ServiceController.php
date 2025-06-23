@@ -82,6 +82,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validated();
         $service = $this->serviceAction->create($validated);
+
         return $this->dataResponse('Service created successfully', ServiceResource::make($service));
     }
 
@@ -92,6 +93,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validated();
         $service = $this->serviceAction->update($service, $validated);
+
         return $this->dataResponse('Service updated successfully', ServiceResource::make($service));
     }
 

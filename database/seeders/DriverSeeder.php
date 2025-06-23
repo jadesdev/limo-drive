@@ -3,10 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Driver;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DriverSeeder extends Seeder
 {

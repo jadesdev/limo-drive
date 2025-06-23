@@ -20,8 +20,6 @@ class ContactController extends Controller
      * Send a contact message
      *
      * @unauthenticated
-     * @param ContactFormRequest $request
-     * @return JsonResponse
      */
     public function store(ContactFormRequest $request): JsonResponse
     {
@@ -35,9 +33,6 @@ class ContactController extends Controller
 
     /**
      * Fetch all contact messages
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -55,9 +50,6 @@ class ContactController extends Controller
 
     /**
      * Fetch a contact message by id
-     *
-     * @param ContactMessage $contact
-     * @return JsonResponse
      */
     public function show(ContactMessage $contact): JsonResponse
     {
@@ -71,10 +63,6 @@ class ContactController extends Controller
 
     /**
      * Send a reply to a contact message
-     *
-     * @param ContactMessage $contact
-     * @param Request $request
-     * @return JsonResponse
      */
     public function reply(ContactMessage $contact, Request $request): JsonResponse
     {
@@ -91,9 +79,6 @@ class ContactController extends Controller
 
     /**
      * Delete a contact message
-     *
-     * @param ContactMessage $contact
-     * @return JsonResponse
      */
     public function destroy(ContactMessage $contact): JsonResponse
     {

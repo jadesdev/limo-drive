@@ -12,9 +12,6 @@ class DriverAction
 {
     /**
      * Create a new driver with the given data.
-     *
-     * @param array $data
-     * @return \App\Models\Driver
      */
     public function create(array $data): Driver
     {
@@ -25,12 +22,12 @@ class DriverAction
             }
 
             // Set default status if not provided
-            if (!isset($data['status'])) {
+            if (! isset($data['status'])) {
                 $data['status'] = 'active';
             }
 
             // Set default is_available if not provided
-            if (!isset($data['is_available'])) {
+            if (! isset($data['is_available'])) {
                 $data['is_available'] = true;
             }
 
@@ -41,10 +38,6 @@ class DriverAction
 
     /**
      * Update an existing driver with the given data.
-     *
-     * @param \App\Models\Driver $driver
-     * @param array $data
-     * @return \App\Models\Driver
      */
     public function update(Driver $driver, array $data): Driver
     {
@@ -75,9 +68,6 @@ class DriverAction
 
     /**
      * Delete a driver and their associated files.
-     *
-     * @param \App\Models\Driver $driver
-     * @return bool
      */
     public function delete(Driver $driver): bool
     {
@@ -94,11 +84,6 @@ class DriverAction
 
     /**
      * Update driver's location.
-     *
-     * @param \App\Models\Driver $driver
-     * @param float $latitude
-     * @param float $longitude
-     * @return bool
      */
     public function updateLocation(Driver $driver, float $latitude, float $longitude): bool
     {
@@ -111,10 +96,6 @@ class DriverAction
 
     /**
      * Update driver's availability.
-     *
-     * @param \App\Models\Driver $driver
-     * @param bool $isAvailable
-     * @return bool
      */
     public function updateAvailability(Driver $driver, bool $isAvailable): bool
     {
@@ -123,14 +104,11 @@ class DriverAction
 
     /**
      * Upload a file to the specified directory.
-     *
-     * @param \Illuminate\Http\UploadedFile $file
-     * @param string $directory
-     * @return string
      */
     protected function uploadFile(UploadedFile $file, string $directory): string
     {
         $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+
         return $file->storeAs($directory, $filename, 'uploads');
     }
 
@@ -154,9 +132,6 @@ class DriverAction
     /**
      * Get drivers near a specific location.
      *
-     * @param float $latitude
-     * @param float $longitude
-     * @param int $radiusInKm
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getDriversNearLocation(float $latitude, float $longitude, int $radiusInKm = 10)

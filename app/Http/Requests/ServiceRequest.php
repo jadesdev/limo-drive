@@ -26,15 +26,15 @@ class ServiceRequest extends FormRequest
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'description' => 'required|string',
             'short_description' => 'nullable|string|max:500',
-            
+
             // Problem Solved Section
             'problem_solved_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'problem_solved_desc' => 'nullable|string',
-            
+
             // Target Audience Section
             'target_audience_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'target_audience_desc' => 'nullable|string',
-            
+
             // Client Benefits Section
             'client_benefits_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
             'client_benefits_desc' => 'nullable|string',

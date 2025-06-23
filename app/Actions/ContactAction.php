@@ -4,7 +4,6 @@ namespace App\Actions;
 
 use App\Models\ContactMessage;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Stevebauman\Purify\Facades\Purify;
 
@@ -12,9 +11,6 @@ class ContactAction
 {
     /**
      * Create a new contact message
-     *
-     * @param array $data
-     * @return ContactMessage
      */
     public function createContactMessage(array $data): ContactMessage
     {
@@ -22,15 +18,12 @@ class ContactAction
 
         $adminEmail = config('mail.from.address');
         $this->sendEmail($adminEmail, 'New Enquiry Received', $validated['message']);
+
         return ContactMessage::create($validated);
     }
 
     /**
      * Get paginated contact messages with optional search
-     *
-     * @param string|null $search
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getPaginatedMessages(?string $search = null, int $perPage = 20): LengthAwarePaginator
     {
@@ -50,21 +43,21 @@ class ContactAction
     /**
      * Get a single contact message by ID
      *
-     * @param string $id
-     * @return ContactMessage
+     * @param  string  $id
+     *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getMessageById(ContactMessage $contact): ContactMessage
     {
         $contact->update(['status' => 'opened', 'is_read' => true]);
+
         return $contact;
     }
 
     /**
      * Mark message as opened
      *
-     * @param string $id
-     * @return bool
+     * @param  string  $id
      */
     public function markAsOpened(ContactMessage $contact): bool
     {
@@ -74,8 +67,8 @@ class ContactAction
     /**
      * Delete a contact message
      *
-     * @param string $id
-     * @return bool
+     * @param  string  $id
+     *
      * @throws \Exception
      */
     public function deleteMessage(ContactMessage $contact): bool
@@ -85,7 +78,6 @@ class ContactAction
 
     /**
      * Send a reply to a contact message
-     *
      */
     public function sendReply(ContactMessage $contact, array $replyData): bool
     {
@@ -99,8 +91,7 @@ class ContactAction
         return true;
     }
 
-
-    function sendEmail($email, $subject, $message)
+    public function sendEmail($email, $subject, $message)
     {
         // Mail::to($email)->send(new ContactReplyMail($message));
     }

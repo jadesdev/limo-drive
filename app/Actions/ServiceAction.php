@@ -12,9 +12,6 @@ class ServiceAction
 {
     /**
      * Create a new service with the given data.
-     *
-     * @param array $data
-     * @return \App\Models\Service
      */
     public function create(array $data): Service
     {
@@ -47,10 +44,6 @@ class ServiceAction
 
     /**
      * Update an existing service with the given data.
-     *
-     * @param \App\Models\Service $service
-     * @param array $data
-     * @return \App\Models\Service
      */
     public function update(Service $service, array $data): Service
     {
@@ -83,28 +76,23 @@ class ServiceAction
             $data = $this->prepareArrayData($data);
 
             $service->update($data);
+
             return $service->fresh();
         });
     }
 
     /**
      * Upload a file to the specified directory.
-     *
-     * @param \Illuminate\Http\UploadedFile $file
-     * @param string $directory
-     * @return string
      */
     protected function uploadFile(UploadedFile $file, string $directory): string
     {
         $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+
         return $file->storeAs($directory, $filename, 'uploads');
     }
 
     /**
      * Prepare array data for storage.
-     *
-     * @param array $data
-     * @return array
      */
     protected function prepareArrayData(array $data): array
     {

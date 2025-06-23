@@ -3,25 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Actions\DriverAction;
-use App\Http\Resources\DriverResource;
 use App\Http\Requests\Driver\StoreDriverRequest;
 use App\Http\Requests\Driver\UpdateDriverRequest;
+use App\Http\Resources\DriverResource;
 use App\Models\Driver;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class DriverController extends Controller
 {
     use ApiResponse;
 
-
     public function __construct(protected DriverAction $driverAction) {}
 
     /**
      *All Drivers
-     *
      */
     public function index(Request $request): JsonResponse
     {
