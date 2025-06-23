@@ -82,8 +82,9 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     // Contacts
     Route::controller(ContactController::class)->prefix('contacts')->group(function () {
-        Route::get('/', 'adminIndex');
-        Route::get('/{contact}', 'adminShow');
+        Route::get('/', 'index');
+        Route::get('/{contact}', 'show');
+        Route::post('/{contact}/reply', 'reply');
         Route::delete('/{contact}', 'destroy');
     });
 

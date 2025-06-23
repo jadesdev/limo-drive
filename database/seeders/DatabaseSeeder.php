@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             FleetSeeder::class,
             FaqSeeder::class,
+            DriverSeeder::class,
         ]);
     }
 }

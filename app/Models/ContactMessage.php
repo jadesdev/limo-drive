@@ -22,7 +22,7 @@ class ContactMessage extends Model
         'ip_address',
         'user_agent',
         'is_read',
-        'is_archived',
+        'status',
     ];
 
     /**
@@ -32,6 +32,5 @@ class ContactMessage extends Model
      */
     protected $casts = [
         'is_read' => 'boolean',
-        'is_archived' => 'boolean',
     ];
 }

@@ -8,29 +8,46 @@ use Illuminate\Support\Str;
 
 class MakeAction extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'make:action {name}';
 
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Create a new Action class';
 
-    public function handle(): void
+    /**
+     * Execute the console command.
+     */
+    public function handle()
     {
-        $nameInput = $this->argument('name'); // e.g. Auth/RegisterUser
-        $className = class_basename($nameInput); // RegisterUser
-        $relativePath = str_replace('\\', '/', $nameInput); // Auth/RegisterUser
-        $path = app_path("Actions/{$relativePath}.php");
+        $nameInput = $this->argument('name');
+
+        // Check if there's a directory structure in the name
+        if (Str::contains($nameInput, '/')) {
+            $className = class_basename($nameInput);
+            $relativePath = Str::beforeLast($nameInput, '/');
+            $fullPath = "{$relativePath}/{$className}";
+            $namespace = 'App\\Actions\\' . str_replace('/', '\\', $relativePath);
+        } else {
+            // Simple case - just a action name with no directory
+            $className = $nameInput;
+            $fullPath = $className;
+            $namespace = 'App\\Actions';
+        }
+
+        $path = app_path("Actions/{$fullPath}.php");
 
         if (File::exists($path)) {
             $this->error("Action {$className} already exists!");
 
             return;
-        }
-
-        // Get the namespace
-        $namespace = 'App\\Actions\\' . str_replace('/', '\\', Str::beforeLast($relativePath, '/'));
-
-        // Fallback in case there's no subdirectory (root level)
-        if (! Str::contains($namespace, '\\')) {
-            $namespace = 'App\\Actions';
         }
 
         $stub = File::get(base_path('stubs/action.stub'));

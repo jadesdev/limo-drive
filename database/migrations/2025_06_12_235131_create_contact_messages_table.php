@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
             $table->boolean('is_read')->default(false)->index();
-            $table->boolean('is_archived')->default(false)->index();
+            $table->string('status')->default('unread')->index();
             $table->timestamps();
         });
     }
