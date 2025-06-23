@@ -27,6 +27,10 @@ class Fleet extends Model
         'specifications',
         'is_active',
         'order',
+        'base_rate',
+        'rate_per_km',
+        'rate_per_minute',
+        'minimum_hours',
     ];
 
     /**
@@ -39,9 +43,9 @@ class Fleet extends Model
         'features' => 'array',
         'specifications' => 'array',
         'is_active' => 'boolean',
-        'order' => 'integer',
-        'seats' => 'integer',
-        'bags' => 'integer',
+        'base_rate' => 'decimal:2',
+        'rate_per_km' => 'decimal:2',
+        'rate_per_minute' => 'decimal:2',
     ];
 
     public function scopeActive($query)

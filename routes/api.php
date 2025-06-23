@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -47,6 +49,12 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware(['throt
 
 // Faqs
 Route::get('/faqs', [FaqController::class, 'index']);
+// Booking
+Route::controller(BookingController::class)->prefix('bookings')->group(function () {
+    Route::post('/quote', 'getQuote');
+    Route::post('/', 'store');
+    Route::post('/{booking}/create-payment-intent', 'createPaymentIntent');
+});
 
 // Admin Routes
 Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
@@ -91,3 +99,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     // Drivers
     Route::apiResource('drivers', DriverController::class);
 });
+
+// Stripe Webhook
+Route::post('/stripe-webhook', [StripeWebhookController::class, 'handle']);
