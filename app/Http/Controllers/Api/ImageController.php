@@ -3,47 +3,30 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\ImageKitService;
-use Illuminate\Http\Request;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class ImageController extends Controller
 {
-    protected $imageKitService;
-
-    public function __construct(ImageKitService $imageKitService)
-    {
-        $this->imageKitService = $imageKitService;
-    }
+    public function __construct(protected FileUploadService $fileUploadService) {}
 
     /**
      * Upload an image
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function upload(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
             'folder' => 'sometimes|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         $file = $request->file('image');
         $folder = $request->input('folder', 'uploads');
-        
-        $result = $this->imageKitService->upload($file, $folder);
 
-        if (!$result) {
+        $result = $this->fileUploadService->upload($file, $folder);
+
+        if (! $result) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload image',
@@ -58,15 +41,12 @@ class ImageController extends Controller
 
     /**
      * Delete an image
-     *
-     * @param string $fileId
-     * @return JsonResponse
      */
     public function delete(string $fileId): JsonResponse
     {
-        $success = $this->imageKitService->delete($fileId);
+        $success = $this->fileUploadService->delete($fileId);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete image',

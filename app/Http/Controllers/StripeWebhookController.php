@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Stripe\Webhook;
-use Stripe\Exception\UnexpectedValueException;
 use App\Models\Booking;
 use App\Models\Payment;
-use Stripe\Exception\SignatureVerificationException;
-use Stripe\PaymentIntent;
+use App\Traits\ApiResponse;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Str;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\Exception\UnexpectedValueException;
+use Stripe\PaymentIntent;
+use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
 {
     use ApiResponse;
+
     /**
      * Handle a Stripe webhook call.
+     *
      * @ignore
      */
     #[ExcludeRouteFromDocs]
@@ -30,7 +32,7 @@ class StripeWebhookController extends Controller
 
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
-        } catch (UnexpectedValueException | SignatureVerificationException $e) {
+        } catch (UnexpectedValueException|SignatureVerificationException $e) {
             // Invalid payload or signature
             return response('Invalid request', 400);
         }
@@ -45,19 +47,16 @@ class StripeWebhookController extends Controller
 
     /**
      * Handle the logic for a successful payment.
-     *
-     * @param  \Stripe\PaymentIntent  $paymentIntent
-     * @return void
      */
     protected function handlePaymentSucceeded(PaymentIntent $paymentIntent): void
     {
         $bookingId = $paymentIntent->metadata->booking_id ?? null;
-        if (!$bookingId) {
+        if (! $bookingId) {
             return;
         }
 
         $booking = Booking::find($bookingId);
-        if (!$booking) {
+        if (! $booking) {
             return;
         }
 

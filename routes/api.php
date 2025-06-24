@@ -10,7 +10,6 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StripeWebhookController;
-use App\Http\Controllers\Api\ImageController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -47,12 +46,6 @@ Route::controller(FleetController::class)->prefix('fleets')->group(function () {
 
 // Contact message
 Route::post('/contact', [ContactController::class, 'store'])->middleware(['throttle:6,1']);
-
-// Image upload routes
-Route::middleware('api')->group(function () {
-    Route::post('/images/upload', [ImageController::class, 'upload']);
-    Route::delete('/images/{fileId}', [ImageController::class, 'delete']);
-});
 
 // Faqs
 Route::get('/faqs', [FaqController::class, 'index']);

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use ImageKit\ImageKit as ImageKitSDK;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use ImageKit\ImageKit as ImageKitSDK;
 
 class ImageKitService
 {
@@ -23,20 +23,17 @@ class ImageKitService
     /**
      * Upload an image to ImageKit
      *
-     * @param UploadedFile $file
-     * @param string $folder
-     * @param string $fileName
      * @return array|null
      */
     public function upload(UploadedFile $file, string $folder = 'uploads', ?string $fileName = null)
     {
         try {
-            if (!$fileName) {
+            if (! $fileName) {
                 $fileName = (string) Str::uuid() . '.' . $file->getClientOriginalExtension();
             }
 
             $fileContent = file_get_contents($file->getRealPath());
-            
+
             $response = $this->imageKit->uploadFile([
                 'file' => $fileContent,
                 'fileName' => $fileName,
@@ -57,33 +54,29 @@ class ImageKitService
             ];
         } catch (\Exception $e) {
             Log::error('ImageKit upload failed: ' . $e->getMessage());
+
             return null;
         }
     }
 
     /**
      * Delete a file from ImageKit
-     *
-     * @param string $fileId
-     * @return bool
      */
     public function delete(string $fileId): bool
     {
         try {
             $response = $this->imageKit->deleteFile($fileId);
+
             return $response->result === 'file deleted successfully';
         } catch (\Exception $e) {
             Log::error('ImageKit delete failed: ' . $e->getMessage());
+
             return false;
         }
     }
 
     /**
      * Generate a URL for an image with optional transformations
-     *
-     * @param string $filePath
-     * @param array $transformations
-     * @return string
      */
     public function getUrl(string $filePath, array $transformations = []): string
     {
@@ -94,6 +87,7 @@ class ImageKitService
             ]);
         } catch (\Exception $e) {
             Log::error('ImageKit URL generation failed: ' . $e->getMessage());
+
             return '';
         }
     }

@@ -8,7 +8,6 @@ use App\Http\Requests\GetQuoteRequest;
 use App\Models\Booking;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
@@ -18,6 +17,7 @@ class BookingController extends Controller
 
     /**
      * Get a price quote booking.
+     *
      * @unauthenticated
      */
     public function getQuote(GetQuoteRequest $request): JsonResponse
@@ -29,6 +29,7 @@ class BookingController extends Controller
 
     /**
      * Store a new booking.
+     *
      * @unauthenticated
      */
     public function store(CreateBookingRequest $request): JsonResponse
@@ -48,6 +49,7 @@ class BookingController extends Controller
 
     /**
      * Create a payment intent for a given booking.
+     *
      * @unauthenticated
      */
     public function createPaymentIntent(Booking $booking): JsonResponse

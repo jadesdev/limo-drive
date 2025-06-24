@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
-
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Log;
@@ -12,15 +10,11 @@ class GoogleMapsService
 {
     /**
      * The Google Maps API Key.
-     *
-     * @var string
      */
     protected string $apiKey;
 
     /**
      * The base URL for the Google Maps API.
-     *
-     * @var string
      */
     protected string $baseUrl = 'https://maps.googleapis.com/maps/api/distancematrix/json';
 
@@ -36,8 +30,6 @@ class GoogleMapsService
     /**
      * Get the distance and duration between an origin and a destination.
      *
-     * @param  string  $origin
-     * @param  string  $destination
      * @return array|null An array with 'distance' (in meters) and 'duration' (in seconds), or null on failure.
      *
      * @throws ValidationException
@@ -53,6 +45,7 @@ class GoogleMapsService
 
         if ($response->failed()) {
             Log::error('Google Maps API request failed: ' . $response->body());
+
             return null;
         }
 
@@ -69,7 +62,6 @@ class GoogleMapsService
                 'route' => ['Could not find a valid route for one of the locations specified.'],
             ]);
         }
-
 
         $element = $data['rows'][0]['elements'][0];
 
