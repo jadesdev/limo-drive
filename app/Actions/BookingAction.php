@@ -13,18 +13,8 @@ use Stripe\Stripe;
 
 class BookingAction
 {
-    protected GoogleMapsService $googleMapsService;
-
-    public function __construct(GoogleMapsService $googleMapsService)
-    {
-        $this->googleMapsService = $googleMapsService;
-    }
-
     /**
      * Get a quote for a trip based on service type and other parameters.
-     *
-     * @param  array  $data The validated request data.
-     * @return \Illuminate\Support\Collection A collection of suitable fleets with their calculated prices.
      *
      * @throws ValidationException
      */
@@ -52,22 +42,24 @@ class BookingAction
      */
     protected function getDistanceBasedQuote(array $data)
     {
-        // $routeInfo = $this->googleMapsService->getDistanceMatrix(
-        //     $data['pickup_address'],
-        //     $data['dropoff_address']
-        // );
+        $demoMode = true;
+        if ($demoMode) {
+            $routeInfo = $this->getSimulatedTripInfo($data['service_type']);
+        } else {
+            $googleMapsService = app(GoogleMapsService::class);
+            $routeInfo = $googleMapsService->getDistanceMatrix(
+                $data['pickup_address'],
+                $data['dropoff_address']
+            );
+            if (!$routeInfo) {
+                throw ValidationException::withMessages([
+                    'route' => ['We could not calculate the route at this time. Please try again later.'],
+                ]);
+            }
+        }
 
-        // if (!$routeInfo) {
-        //     throw ValidationException::withMessages([
-        //         'route' => ['We could not calculate the route at this time. Please try again later.'],
-        //     ]);
-        // }
-
-        // $distanceInKm = $routeInfo['distance_meters'] / 1000;
-        // $durationInMinutes = $routeInfo['duration_seconds'] / 60;
-
-        $distanceInKm = rand(1, 10);
-        $durationInMinutes = rand(60, 420);
+        $distanceInKm = $routeInfo['distance_meters'] / 1000;
+        $durationInMinutes = $routeInfo['duration_seconds'] / 60;
 
         $fleets = Fleet::active()
             ->where('seats', '>=', $data['passenger_count'])
@@ -132,7 +124,7 @@ class BookingAction
                 $bookingHours = $fleet->minimum_hours;
             }
 
-            $price = $fleet->rate_per_hour * $bookingHours;
+            $price = ($fleet->rate_per_minute * 60) * $bookingHours;
 
             return [
                 'id' => $fleet->id,
@@ -199,5 +191,23 @@ class BookingAction
                 'booking_code' => $booking->code,
             ],
         ]);
+    }
+
+    /**
+     * Helper to get simulated trip info based on service type.
+     */
+    protected function getSimulatedTripInfo(string $serviceType): array
+    {
+        switch ($serviceType) {
+            case 'point_to_point':
+                return ['distance_meters' => 15000, 'duration_seconds' => 1800, 'duration_text' => '30 mins'];
+            case 'airport_pickup':
+            case 'airport_transfer':
+                return ['distance_meters' => 40000, 'duration_seconds' => 3600, 'duration_text' => '1 hour'];
+            case 'round_trip':
+                return ['distance_meters' => 20000, 'duration_seconds' => 2400, 'duration_text' => '40 mins (each way)'];
+            default:
+                return ['distance_meters' => 10000, 'duration_seconds' => 1200, 'duration_text' => '20 mins'];
+        }
     }
 }
