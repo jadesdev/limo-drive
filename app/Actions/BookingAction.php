@@ -51,7 +51,7 @@ class BookingAction
                 $data['pickup_address'],
                 $data['dropoff_address']
             );
-            if (!$routeInfo) {
+            if (! $routeInfo) {
                 throw ValidationException::withMessages([
                     'route' => ['We could not calculate the route at this time. Please try again later.'],
                 ]);
@@ -138,11 +138,10 @@ class BookingAction
         });
     }
 
-
     /**
      * Create a new booking with a 'pending_payment' status.
      *
-     * @param  array  $data Validated booking data.
+     * @param  array  $data  Validated booking data.
      * @return Booking The newly created booking model instance.
      *
      * @throws ValidationException
@@ -152,7 +151,7 @@ class BookingAction
         $quoteData = $this->getQuote($data);
         $selectedFleetQuote = $quoteData->firstWhere('id', $data['fleet_id']);
 
-        if (!$selectedFleetQuote) {
+        if (! $selectedFleetQuote) {
             throw ValidationException::withMessages([
                 'fleet_id' => 'The selected vehicle is not available for the specified requirements.',
             ]);
@@ -172,9 +171,6 @@ class BookingAction
 
     /**
      * Create a Stripe Payment Intent for a booking.
-     *
-     * @param  Booking  $booking
-     * @return PaymentIntent
      */
     public function createPaymentIntent(Booking $booking): PaymentIntent
     {

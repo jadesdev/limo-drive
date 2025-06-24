@@ -16,6 +16,7 @@ class FleetResource extends JsonResource
     public function toArray(Request $request): array
     {
         $isAdmin = Auth::user()?->isAdmin() ?? false;
+
         return [
             'id' => $this->id,
             'name' => $this->name,

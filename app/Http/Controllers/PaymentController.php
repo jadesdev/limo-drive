@@ -54,6 +54,7 @@ class PaymentController extends Controller
     public function show(Payment $payment)
     {
         $payment->load('booking');
+
         return $this->successResponse(
             'Payment retrieved successfully',
             new PaymentResource($payment)

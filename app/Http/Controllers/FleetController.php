@@ -6,14 +6,16 @@ use App\Http\Requests\StoreFleetRequest;
 use App\Http\Requests\UpdateFleetRequest;
 use App\Http\Resources\FleetResource;
 use App\Models\Fleet;
+use App\Services\FileUploadService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Storage;
 
 class FleetController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(private FileUploadService $fileUploadService) {}
 
     /**
      * Fetch all fleets
@@ -113,7 +115,7 @@ class FleetController extends Controller
         if ($request->hasFile('thumbnail')) {
             // Delete old thumbnail
             if ($fleet->thumbnail) {
-                Storage::disk('uploads')->delete($fleet->thumbnail);
+                $this->fileUploadService->delete($fleet->thumbnail);
             }
             $validated['thumbnail'] = $this->uploadFile($request->file('thumbnail'), 'fleets');
         }
@@ -123,11 +125,11 @@ class FleetController extends Controller
             // Delete old images
             if (is_array($fleet->images)) {
                 foreach ($fleet->images as $oldImage) {
-                    Storage::disk('uploads')->delete($oldImage);
+                    // $this->fileUploadService->delete($oldImage);
                 }
             }
 
-            $imagePaths = [];
+            $imagePaths = array_merge($fleet->images, []);
             foreach ($request->file('images') as $image) {
                 $imagePaths[] = $this->uploadFile($image, 'fleets');
             }
@@ -146,12 +148,12 @@ class FleetController extends Controller
     {
         // Delete associated files
         if ($fleet->thumbnail) {
-            Storage::disk('uploads')->delete($fleet->thumbnail);
+            $this->fileUploadService->delete($fleet->thumbnail);
         }
 
         if (is_array($fleet->images)) {
             foreach ($fleet->images as $image) {
-                Storage::disk('uploads')->delete($image);
+                $this->fileUploadService->delete($image);
             }
         }
 
@@ -165,10 +167,9 @@ class FleetController extends Controller
      */
     private function uploadFile($file, $directory = 'fleets')
     {
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs($directory, $filename, 'uploads');
+        $path = $this->fileUploadService->upload($file, $directory);
 
-        return $path;
+        return $path['file_path'];
     }
 
     /**
