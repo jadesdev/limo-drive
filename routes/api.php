@@ -55,7 +55,7 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::get('/', 'adminIndex');
         Route::get('/{service}', 'adminShow');
         Route::post('/', 'store');
-        Route::put('/{service}', 'update');
+        Route::post('/{service}', 'update');
         Route::delete('/{service}', 'destroy');
     });
 
