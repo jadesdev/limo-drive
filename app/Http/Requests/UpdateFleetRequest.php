@@ -38,6 +38,8 @@ class UpdateFleetRequest extends FormRequest
             'bags' => 'sometimes|required|integer|min:0|max:50',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10048',
+            'images_deleted' => 'nullable|array',
+            'images_deleted.*' => 'string',
             'features' => 'nullable|array',
             'features.*' => 'string|max:255',
             'specifications' => 'nullable|array',
