@@ -29,19 +29,11 @@ class GetQuoteRequest extends FormRequest
             'pickup_address' => ['required', 'string', 'max:255'],
             'passenger_count' => ['required', 'integer', 'min:1'],
             'bag_count' => ['required', 'integer', 'min:0'],
-            'dropoff_address' => ['nullable', 'string', 'max:255'],
+            /** required if service type is point_to_point, airport_pickup, airport_transfer, or round_trip */
+            'dropoff_address' => ['required_if:service_type,point_to_point,airport_pickup,airport_transfer,round_trip', 'string', 'max:255'],
+            /** required if service type is wedding, event, or other */
+            'duration_hours' => ['required_if:service_type,wedding,event,other', 'integer', 'min:1'],
         ];
-
-        // Add rules specific to distance-based services
-        if (in_array($serviceType, ['point_to_point', 'airport_pickup', 'airport_transfer', 'round_trip'])) {
-            $rules['dropoff_address'] = ['required', 'string', 'max:255'];
-        }
-
-        // Add rules specific to hourly-based services
-        if (in_array($serviceType, ['wedding', 'event', 'other'])) {
-            $rules['duration_hours'] = ['required', 'integer', 'min:1'];
-        }
-
         return $rules;
     }
 }

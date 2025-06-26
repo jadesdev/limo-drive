@@ -47,9 +47,9 @@ class UpdateFleetRequest extends FormRequest
             'specifications.*.value' => 'required|string|max:255',
             'is_active' => 'boolean',
             'order' => 'nullable|integer|min:1',
-            'base_rate' => 'nullable|numeric',
-            'rate_per_km' => 'nullable|numeric',
-            'rate_per_minute' => 'nullable|numeric',
+            'base_fee' => 'nullable|numeric',
+            'rate_per_mile' => 'nullable|numeric',
+            'rate_per_hour' => 'nullable|numeric',
             'minimum_hours' => 'nullable|integer|min:1',
         ];
     }

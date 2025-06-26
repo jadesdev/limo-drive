@@ -40,7 +40,7 @@ class GoogleMapsService
             'origins' => $origin,
             'destinations' => $destination,
             'key' => $this->apiKey,
-            'units' => 'metric', // Use metric for meters/km. Use 'imperial' for miles/feet.
+            'units' => 'imperial', // Use metric for meters/km. Use 'imperial' for miles/feet.
         ]);
 
         if ($response->failed()) {
@@ -66,7 +66,7 @@ class GoogleMapsService
         $element = $data['rows'][0]['elements'][0];
 
         return [
-            'distance_meters' => $element['distance']['value'],
+            'distance_miles' => $element['distance']['value'],
             'duration_seconds' => $element['duration']['value'],
             'distance_text' => $element['distance']['text'], // e.g., "25.5 km"
             'duration_text' => $element['duration']['text'], // e.g., "35 mins"

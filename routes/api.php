@@ -49,6 +49,7 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware(['throt
 
 // Faqs
 Route::get('/faqs', [FaqController::class, 'index']);
+
 // Booking
 Route::controller(BookingController::class)->prefix('bookings')->group(function () {
     Route::post('/quote', 'getQuote');

@@ -27,9 +27,9 @@ class Fleet extends Model
         'specifications',
         'is_active',
         'order',
-        'base_rate',
-        'rate_per_km',
-        'rate_per_minute',
+        'base_fee',
+        'rate_per_mile',
+        'rate_per_hour',
         'minimum_hours',
     ];
 
@@ -43,9 +43,9 @@ class Fleet extends Model
         'features' => 'array',
         'specifications' => 'array',
         'is_active' => 'boolean',
-        'base_rate' => 'decimal:2',
-        'rate_per_km' => 'decimal:2',
-        'rate_per_minute' => 'decimal:2',
+        'base_fee' => 'decimal:2',
+        'rate_per_mile' => 'decimal:2',
+        'rate_per_hour' => 'decimal:2',
     ];
 
     public function scopeActive($query)
@@ -71,5 +71,15 @@ class Fleet extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Get the rate per hour.
+     *
+     * @return float
+     */
+    public function getRatePerMinAttribute()
+    {
+        return $this->rate_per_hour / 60;
     }
 }

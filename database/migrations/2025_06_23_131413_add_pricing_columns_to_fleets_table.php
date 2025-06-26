@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fleets', function (Blueprint $table) {
-            $table->decimal('base_rate', 8, 2)->default(0.00)->after('bags');
-            $table->decimal('rate_per_km', 8, 2)->default(0.00)->after('base_rate');
-            $table->decimal('rate_per_minute', 8, 2)->default(0.00)->after('rate_per_km');
+            $table->decimal('base_fee', 8, 2)->default(0.00)->after('bags');
+            $table->decimal('rate_per_mile', 8, 2)->default(0.00)->after('base_fee');
+            $table->decimal('rate_per_hour', 8, 2)->default(0.00)->after('rate_per_mile');
             $table->unsignedInteger('minimum_hours')->default(1)->after('rate_per_hour');
         });
     }
@@ -26,9 +26,9 @@ return new class extends Migration
     {
         Schema::table('fleets', function (Blueprint $table) {
             $table->dropColumn([
-                'base_rate',
-                'rate_per_km',
-                'rate_per_minute',
+                'base_fee',
+                'rate_per_mile',
+                'rate_per_hour',
                 'minimum_hours',
             ]);
         });
