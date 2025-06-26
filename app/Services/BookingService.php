@@ -7,18 +7,15 @@ use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
 use App\Models\Fleet;
 use App\Models\Payment;
-use App\Services\GoogleMapsService;
-use Exception;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Str;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
-use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
-
     /**
      * Get a quote for a trip based on service type and other parameters.
      *
@@ -90,6 +87,7 @@ class BookingService
             if ($data['service_type'] === 'round_trip') {
                 $totalPrice *= 2;
             }
+
             return [
                 'id' => $fleet->id,
                 'name' => $fleet->name,
@@ -103,18 +101,18 @@ class BookingService
                 'price_breakdown' => [
                     'base_fare' => round($baseFare, 2),
                     'surcharges' => round($surcharges, 2),
-                    'total' => round($totalPrice, 2)
+                    'total' => round($totalPrice, 2),
                 ],
                 'distance' => [
                     'miles' => $distanceInMiles,
                     'minutes' => $durationInMinutes,
                     'description' => $durationText,
-                ]
+                ],
             ];
         });
 
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -169,13 +167,13 @@ class BookingService
                     'surcharges' => round($surcharges, 2),
                     'hourly_rate' => round($fleet->rate_per_hour, 2),
                     'total_hours' => $bookingHours,
-                    'total' => round($totalPrice, 2)
-                ]
+                    'total' => round($totalPrice, 2),
+                ],
             ];
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -325,7 +323,7 @@ class BookingService
                     'code' => $booking->code,
                     'status' => $booking->status,
                     'payment_status' => $booking->payment_status,
-                ]
+                ],
             ];
         } catch (\Exception $e) {
             return [
@@ -345,6 +343,7 @@ class BookingService
         } else {
             $booking = Booking::with(['fleet', 'latestPayment'])->where('code', $id)->firstOrFail();
         }
+
         return $booking;
     }
 
@@ -357,19 +356,21 @@ class BookingService
         try {
             $bookingId = $paymentIntent->metadata->booking_id ?? null;
 
-            if (!$bookingId) {
+            if (! $bookingId) {
                 \Log::warning('Webhook payment intent missing booking_id', [
-                    'payment_intent_id' => $paymentIntent->id
+                    'payment_intent_id' => $paymentIntent->id,
                 ]);
+
                 return false;
             }
 
             $booking = Booking::find($bookingId);
-            if (!$booking) {
+            if (! $booking) {
                 \Log::warning('Booking not found for webhook', [
                     'booking_id' => $bookingId,
-                    'payment_intent_id' => $paymentIntent->id
+                    'payment_intent_id' => $paymentIntent->id,
                 ]);
+
                 return false;
             }
 
@@ -394,15 +395,16 @@ class BookingService
             \Log::info('Booking payment confirmed via webhook', [
                 'booking_id' => $booking->id,
                 'booking_code' => $booking->code,
-                'payment_intent_id' => $paymentIntent->id
+                'payment_intent_id' => $paymentIntent->id,
             ]);
 
             return true;
         } catch (\Exception $e) {
             \Log::error('Webhook payment processing failed', [
                 'payment_intent_id' => $paymentIntent->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -422,17 +424,13 @@ class BookingService
             'distance_miles' => $distanceMiles,
             'duration_seconds' => $durationSeconds,
             'duration_text' => $durationText,
-            'distance_text' => $distanceMiles . ' miles'
+            'distance_text' => $distanceMiles . ' miles',
         ];
     }
 
     /**
      * Update a booking with validated data.
      * Handles mapping of nested request arrays to flat DB columns.
-     *
-     * @param array $data
-     * @param Booking $booking
-     * @return Booking
      */
     public function updateBooking(array $data, Booking $booking): Booking
     {
@@ -440,46 +438,88 @@ class BookingService
         $update = [];
 
         // Booking Choices
-        if (isset($data['service_type'])) $update['service_type'] = $data['service_type'];
-        if (isset($data['fleet_id'])) $update['fleet_id'] = $data['fleet_id'];
+        if (isset($data['service_type'])) {
+            $update['service_type'] = $data['service_type'];
+        }
+        if (isset($data['fleet_id'])) {
+            $update['fleet_id'] = $data['fleet_id'];
+        }
 
         // Customer Details
         if (isset($data['customer'])) {
             $customer = $data['customer'];
-            if (isset($customer['first_name'])) $update['customer_first_name'] = $customer['first_name'];
-            if (isset($customer['last_name'])) $update['customer_last_name'] = $customer['last_name'];
-            if (isset($customer['email'])) $update['customer_email'] = $customer['email'];
-            if (isset($customer['phone'])) $update['customer_phone'] = $customer['phone'];
+            if (isset($customer['first_name'])) {
+                $update['customer_first_name'] = $customer['first_name'];
+            }
+            if (isset($customer['last_name'])) {
+                $update['customer_last_name'] = $customer['last_name'];
+            }
+            if (isset($customer['email'])) {
+                $update['customer_email'] = $customer['email'];
+            }
+            if (isset($customer['phone'])) {
+                $update['customer_phone'] = $customer['phone'];
+            }
         }
 
         // Trip Details
         if (isset($data['pickup'])) {
             $pickup = $data['pickup'];
-            if (isset($pickup['datetime'])) $update['pickup_datetime'] = $pickup['datetime'];
-            if (isset($pickup['address'])) $update['pickup_address'] = $pickup['address'];
-            if (array_key_exists('latitude', $pickup)) $update['pickup_latitude'] = $pickup['latitude'];
-            if (array_key_exists('longitude', $pickup)) $update['pickup_longitude'] = $pickup['longitude'];
+            if (isset($pickup['datetime'])) {
+                $update['pickup_datetime'] = $pickup['datetime'];
+            }
+            if (isset($pickup['address'])) {
+                $update['pickup_address'] = $pickup['address'];
+            }
+            if (array_key_exists('latitude', $pickup)) {
+                $update['pickup_latitude'] = $pickup['latitude'];
+            }
+            if (array_key_exists('longitude', $pickup)) {
+                $update['pickup_longitude'] = $pickup['longitude'];
+            }
         }
         if (isset($data['dropoff'])) {
             $dropoff = $data['dropoff'];
-            if (isset($dropoff['address'])) $update['dropoff_address'] = $dropoff['address'];
-            if (array_key_exists('latitude', $dropoff)) $update['dropoff_latitude'] = $dropoff['latitude'];
-            if (array_key_exists('longitude', $dropoff)) $update['dropoff_longitude'] = $dropoff['longitude'];
+            if (isset($dropoff['address'])) {
+                $update['dropoff_address'] = $dropoff['address'];
+            }
+            if (array_key_exists('latitude', $dropoff)) {
+                $update['dropoff_latitude'] = $dropoff['latitude'];
+            }
+            if (array_key_exists('longitude', $dropoff)) {
+                $update['dropoff_longitude'] = $dropoff['longitude'];
+            }
         }
-        if (isset($data['passengers'])) $update['passenger_count'] = $data['passengers'];
-        if (isset($data['bags'])) $update['bag_count'] = $data['bags'];
-        if (isset($data['accessible'])) $update['is_accessible'] = $data['accessible'];
-        if (isset($data['return_service'])) $update['is_return_service'] = $data['return_service'];
-        if (isset($data['duration_hours'])) $update['duration_hours'] = $data['duration_hours'];
+        if (isset($data['passengers'])) {
+            $update['passenger_count'] = $data['passengers'];
+        }
+        if (isset($data['bags'])) {
+            $update['bag_count'] = $data['bags'];
+        }
+        if (isset($data['accessible'])) {
+            $update['is_accessible'] = $data['accessible'];
+        }
+        if (isset($data['return_service'])) {
+            $update['is_return_service'] = $data['return_service'];
+        }
+        if (isset($data['duration_hours'])) {
+            $update['duration_hours'] = $data['duration_hours'];
+        }
 
         // Pricing
-        if (isset($data['price'])) $update['price'] = $data['price'];
+        if (isset($data['price'])) {
+            $update['price'] = $data['price'];
+        }
         if (isset($data['payment'])) {
             $payment = $data['payment'];
-            if (isset($payment['method'])) $update['payment_method'] = $payment['method'];
+            if (isset($payment['method'])) {
+                $update['payment_method'] = $payment['method'];
+            }
         }
         // Additional Info
-        if (array_key_exists('notes', $data)) $update['notes'] = $data['notes'];
+        if (array_key_exists('notes', $data)) {
+            $update['notes'] = $data['notes'];
+        }
 
         // Actually update the booking
         $booking->update($update);

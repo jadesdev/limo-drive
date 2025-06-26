@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BookingService;
 use App\Http\Requests\CreateBookingRequest;
 use App\Http\Requests\GetQuoteRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\Booking\BookingResource;
 use App\Models\Booking;
+use App\Services\BookingService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,6 +39,7 @@ class BookingController extends Controller
     {
         $booking = $this->bookingService->createBooking($request->validated());
         $paymentIntent = $this->bookingService->createPaymentIntent($booking);
+
         return $this->dataResponse(
             'Booking created successfully. Please proceed to payment.',
             [
@@ -73,8 +74,9 @@ class BookingController extends Controller
 
     /**
      * Confirm payment completion
-     * 
+     *
      * This handles cases where webhook fails or needs manual confirmation
+     *
      * @unauthenticated
      */
     public function confirmPayment(Request $request): JsonResponse
@@ -95,7 +97,7 @@ class BookingController extends Controller
                     'Payment confirmed successfully.',
                     [
                         'booking' => $result['booking'],
-                        'payment_status' => 'paid'
+                        'payment_status' => 'paid',
                     ]
                 );
             } else {
@@ -114,7 +116,7 @@ class BookingController extends Controller
 
     /**
      * Get booking details by ID or Code
-     * 
+     *
      * @unauthenticated
      */
     public function show(string $id): JsonResponse
@@ -165,7 +167,7 @@ class BookingController extends Controller
 
     /**
      * Booking details (Admin)
-     * 
+     *
      * Get booking details by ID or Code
      */
     public function adminShow(string $id): JsonResponse

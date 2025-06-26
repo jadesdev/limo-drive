@@ -10,7 +10,6 @@ use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Log;
-use Str;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Exception\UnexpectedValueException;
 use Stripe\PaymentIntent;
@@ -36,9 +35,10 @@ class StripeWebhookController extends Controller
 
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
-        } catch (UnexpectedValueException | SignatureVerificationException $e) {
+        } catch (UnexpectedValueException|SignatureVerificationException $e) {
             // Invalid payload or signature
             Log::error('Stripe webhook invalid payload', ['error' => $e->getMessage()]);
+
             return response('Invalid request', 400);
         }
 
@@ -59,7 +59,7 @@ class StripeWebhookController extends Controller
                 // Log unhandled event types
                 \Log::info('Unhandled Stripe webhook event', [
                     'type' => $event->type,
-                    'id' => $event->id
+                    'id' => $event->id,
                 ]);
         }
 
@@ -81,7 +81,7 @@ class StripeWebhookController extends Controller
         \Log::info('Processing successful payment intent', [
             'payment_intent_id' => $paymentIntent->id,
             'amount' => $paymentIntent->amount,
-            'booking_id' => $paymentIntent->metadata->booking_id ?? null
+            'booking_id' => $paymentIntent->metadata->booking_id ?? null,
         ]);
 
         $success = $this->bookingService->processWebhookPayment($paymentIntent);
@@ -89,7 +89,7 @@ class StripeWebhookController extends Controller
         if ($success) {
             \Log::info('Booking confirmed via webhook', [
                 'payment_intent_id' => $paymentIntent->id,
-                'booking_id' => $paymentIntent->metadata->booking_id
+                'booking_id' => $paymentIntent->metadata->booking_id,
             ]);
 
             // TODO: Send confirmation email to customer
@@ -98,7 +98,7 @@ class StripeWebhookController extends Controller
 
         } else {
             \Log::error('Failed to process successful payment webhook', [
-                'payment_intent_id' => $paymentIntent->id
+                'payment_intent_id' => $paymentIntent->id,
             ]);
         }
     }
@@ -111,7 +111,7 @@ class StripeWebhookController extends Controller
         \Log::warning('Payment intent failed', [
             'payment_intent_id' => $paymentIntent->id,
             'booking_id' => $paymentIntent->metadata->booking_id ?? null,
-            'failure_reason' => $paymentIntent->last_payment_error->message ?? 'Unknown'
+            'failure_reason' => $paymentIntent->last_payment_error->message ?? 'Unknown',
         ]);
 
         // TODO: Update booking status to 'payment_failed'
@@ -126,7 +126,7 @@ class StripeWebhookController extends Controller
     {
         \Log::info('Payment intent canceled', [
             'payment_intent_id' => $paymentIntent->id,
-            'booking_id' => $paymentIntent->metadata->booking_id ?? null
+            'booking_id' => $paymentIntent->metadata->booking_id ?? null,
         ]);
 
         // TODO: Update booking status to 'canceled'

@@ -32,6 +32,7 @@ class GetQuoteRequest extends FormRequest
             /** required if service type is wedding, event, or other */
             'duration_hours' => ['required_if:service_type,wedding,event,other', 'integer', 'min:1'],
         ];
+
         return $rules;
     }
 }

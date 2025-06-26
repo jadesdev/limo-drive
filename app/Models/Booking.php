@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Str;
 
 class Booking extends Model
@@ -43,7 +42,7 @@ class Booking extends Model
         'payment_method',
         'payment_status',
         'notes',
-        'status'
+        'status',
     ];
 
     /**
@@ -57,7 +56,7 @@ class Booking extends Model
         'is_return_service' => 'boolean',
     ];
 
-    function getNameAttribute()
+    public function getNameAttribute()
     {
         return $this->customer_first_name . ' ' . $this->customer_last_name;
     }
@@ -101,6 +100,7 @@ class Booking extends Model
     {
         return $this->hasOne(Payment::class)->latestOfMany();
     }
+
     /**
      * Generate a booking code.
      */
@@ -112,6 +112,7 @@ class Booking extends Model
             $model->code = $model->code ?? self::generateBookingCode();
         });
     }
+
     /**
      * Generate a booking code.
      */

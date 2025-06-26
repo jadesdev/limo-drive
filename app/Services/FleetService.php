@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Models\Fleet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Services\FileUploadService;
 
 class FleetService
 {

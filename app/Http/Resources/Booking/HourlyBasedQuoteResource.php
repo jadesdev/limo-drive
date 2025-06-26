@@ -29,11 +29,13 @@ class HourlyBasedQuoteResource extends JsonResource
                 'surcharges' => $this->price_breakdown['surcharges'],
                 /**
                  * Hourly rate per hour
+                 *
                  * @var float
                  */
                 'hourly_rate' => $this->price_breakdown['hourly_rate'],
                 /**
                  * Total hours booked (may be higher than requested due to minimum hours)
+                 *
                  * @var int
                  */
                 'total_hours' => $this->price_breakdown['total_hours'],

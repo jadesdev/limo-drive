@@ -46,7 +46,8 @@ class Payment extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
-    } 
+    }
+
     /**
      * Status Helpers
      */
@@ -59,6 +60,7 @@ class Payment extends Model
     {
         return $this->status === 'pending';
     }
+
     /**
      * Scopes
      */

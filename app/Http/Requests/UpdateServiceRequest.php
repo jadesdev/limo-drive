@@ -32,20 +32,20 @@ class UpdateServiceRequest extends FormRequest
                 Rule::unique('services', 'name')->ignore($serviceId),
             ],
             // Images are optional on update - only validate if provided
-            'banner_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'banner_image' => 'sometimes|nullable|image|max:7048',
             'description' => 'required|string',
             'short_description' => 'nullable|string|max:500',
 
             // Problem Solved Section
-            'problem_solved_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'problem_solved_image' => 'sometimes|nullable|image|max:7048',
             'problem_solved_desc' => 'sometimes|nullable|string',
 
             // Target Audience Section
-            'target_audience_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'target_audience_image' => 'sometimes|nullable|image|max:7048',
             'target_audience_desc' => 'sometimes|nullable|string',
 
             // Client Benefits Section
-            'client_benefits_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:7048',
+            'client_benefits_image' => 'sometimes|nullable|image|max:7048',
             'client_benefits_desc' => 'sometimes|nullable|string',
 
             'features' => 'sometimes|array',
@@ -93,6 +93,5 @@ class UpdateServiceRequest extends FormRequest
                 'technologies' => array_filter(explode(',', $this->technologies)),
             ]);
         }
-
     }
 }
