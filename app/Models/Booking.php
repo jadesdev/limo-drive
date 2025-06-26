@@ -57,11 +57,9 @@ class Booking extends Model
         'is_return_service' => 'boolean',
     ];
 
-    function getNameAttribute(): Attribute
+    function getNameAttribute()
     {
-        return Attribute::make(
-            get: fn($value) => $this->customer_first_name . ' ' . $this->customer_last_name,
-        );
+        return $this->customer_first_name . ' ' . $this->customer_last_name;
     }
 
     /**

@@ -22,8 +22,6 @@ class GetQuoteRequest extends FormRequest
      */
     public function rules(): array
     {
-        $serviceType = $this->input('service_type');
-
         $rules = [
             'service_type' => ['required', 'string', Rule::in(['point_to_point', 'airport_pickup', 'airport_transfer', 'round_trip', 'wedding', 'event', 'other'])],
             'pickup_address' => ['required', 'string', 'max:255'],

@@ -101,6 +101,13 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     // Drivers
     Route::apiResource('drivers', DriverController::class);
 
+    // Bookings
+    Route::controller(BookingController::class)->prefix('bookings')->group(function () {    
+        Route::get('/', 'index');
+        Route::get('/{booking}', 'adminShow');
+        Route::put('/{booking}/assign-driver', 'assignDriver');
+        Route::put('/{booking}', 'update');
+    });
     // Payments
     Route::apiResource('payments', PaymentController::class);
 });

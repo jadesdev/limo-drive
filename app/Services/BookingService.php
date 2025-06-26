@@ -425,4 +425,65 @@ class BookingService
             'distance_text' => $distanceMiles . ' miles'
         ];
     }
+
+    /**
+     * Update a booking with validated data.
+     * Handles mapping of nested request arrays to flat DB columns.
+     *
+     * @param array $data
+     * @param Booking $booking
+     * @return Booking
+     */
+    public function updateBooking(array $data, Booking $booking): Booking
+    {
+        // Map nested request data to flat columns
+        $update = [];
+
+        // Booking Choices
+        if (isset($data['service_type'])) $update['service_type'] = $data['service_type'];
+        if (isset($data['fleet_id'])) $update['fleet_id'] = $data['fleet_id'];
+
+        // Customer Details
+        if (isset($data['customer'])) {
+            $customer = $data['customer'];
+            if (isset($customer['first_name'])) $update['customer_first_name'] = $customer['first_name'];
+            if (isset($customer['last_name'])) $update['customer_last_name'] = $customer['last_name'];
+            if (isset($customer['email'])) $update['customer_email'] = $customer['email'];
+            if (isset($customer['phone'])) $update['customer_phone'] = $customer['phone'];
+        }
+
+        // Trip Details
+        if (isset($data['pickup'])) {
+            $pickup = $data['pickup'];
+            if (isset($pickup['datetime'])) $update['pickup_datetime'] = $pickup['datetime'];
+            if (isset($pickup['address'])) $update['pickup_address'] = $pickup['address'];
+            if (array_key_exists('latitude', $pickup)) $update['pickup_latitude'] = $pickup['latitude'];
+            if (array_key_exists('longitude', $pickup)) $update['pickup_longitude'] = $pickup['longitude'];
+        }
+        if (isset($data['dropoff'])) {
+            $dropoff = $data['dropoff'];
+            if (isset($dropoff['address'])) $update['dropoff_address'] = $dropoff['address'];
+            if (array_key_exists('latitude', $dropoff)) $update['dropoff_latitude'] = $dropoff['latitude'];
+            if (array_key_exists('longitude', $dropoff)) $update['dropoff_longitude'] = $dropoff['longitude'];
+        }
+        if (isset($data['passengers'])) $update['passenger_count'] = $data['passengers'];
+        if (isset($data['bags'])) $update['bag_count'] = $data['bags'];
+        if (isset($data['accessible'])) $update['is_accessible'] = $data['accessible'];
+        if (isset($data['return_service'])) $update['is_return_service'] = $data['return_service'];
+        if (isset($data['duration_hours'])) $update['duration_hours'] = $data['duration_hours'];
+
+        // Pricing
+        if (isset($data['price'])) $update['price'] = $data['price'];
+        if (isset($data['payment'])) {
+            $payment = $data['payment'];
+            if (isset($payment['method'])) $update['payment_method'] = $payment['method'];
+        }
+        // Additional Info
+        if (array_key_exists('notes', $data)) $update['notes'] = $data['notes'];
+
+        // Actually update the booking
+        $booking->update($update);
+
+        return $booking->fresh();
+    }
 }
