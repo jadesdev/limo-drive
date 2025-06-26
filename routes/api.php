@@ -54,7 +54,8 @@ Route::get('/faqs', [FaqController::class, 'index']);
 Route::controller(BookingController::class)->prefix('bookings')->group(function () {
     Route::post('/quote', 'getQuote');
     Route::post('/', 'store');
-    Route::post('/{booking}/create-payment-intent', 'createPaymentIntent');
+    Route::post('/confirm-payment', 'confirmPayment');
+    Route::get('/{id}', 'show');
 });
 
 // Admin Routes

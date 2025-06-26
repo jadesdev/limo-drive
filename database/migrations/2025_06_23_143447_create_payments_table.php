@@ -15,15 +15,18 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('booking_id')->constrained('bookings')->cascadeOnDelete();
             $table->string('code')->nullable();
+            $table->string('payment_intent_id')->nullable()->index();
+            $table->decimal('amount', 10, 2);
+            $table->string('currency', 3)->default('USD');
             $table->string('customer_name')->nullable();
             $table->string('customer_email')->nullable();
             $table->string('gateway_name')->default('stripe');
             $table->string('gateway_ref')->unique();
-            $table->decimal('amount', 10, 2);
-            $table->string('currency', 3);
-            $table->string('status');
+            $table->string('payment_method')->nullable();
+            $table->string('status')->default('pending');
             $table->json('gateway_payload')->nullable();
             $table->timestamps();
+            $table->index(['booking_id', 'status']);
         });
     }
 

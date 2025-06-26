@@ -14,21 +14,37 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('code')->unique();
-            $table->string('customer_name');
+
+            $table->foreignUuid('fleet_id')->nullable()->constrained('fleets')->nullOnDelete();
+            $table->foreignUuid('driver_id')->nullable()->constrained('drivers')->nullOnDelete();
+            $table->string('service_type')->nullable();
+            $table->boolean('is_accessible')->default(false);
+            $table->boolean('is_return_service')->default(false);
+            $table->integer('duration_hours')->nullable();
+
+            $table->string('customer_first_name');
+            $table->string('customer_last_name');
             $table->string('customer_email');
             $table->string('customer_phone');
-            $table->timestamp('pickup_datetime');
+
+            $table->timestamp('pickup_datetime')->index();
             $table->text('pickup_address');
+            $table->string('pickup_latitude')->nullable();
+            $table->string('pickup_longitude')->nullable();
+
             $table->text('dropoff_address')->nullable();
-            $table->integer('passenger_count')->default(1);
-            $table->integer('bag_count')->default(0);
-            $table->text('notes_for_driver')->nullable();
+            $table->string('dropoff_latitude')->nullable();
+            $table->string('dropoff_longitude')->nullable();
+
+            $table->unsignedInteger('passenger_count')->default(1);
+            $table->unsignedInteger('bag_count')->default(0);
+
             $table->decimal('price', 10, 2);
-            $table->string('status')->default('pending_payment')->index();
+            $table->string('payment_method')->nullable();
             $table->string('payment_status')->default('unpaid')->index();
-            $table->foreignUuid('fleet_id')->nullable()->constrained('fleets')->nullOnDelete();
-            $table->foreignUuid('service_id')->nullable()->constrained('services')->nullOnDelete();
-            $table->foreignUuid('driver_id')->nullable()->constrained('drivers')->nullOnDelete();
+            $table->text('notes')->nullable();
+
+            $table->string('status')->default('pending_payment')->index();
             $table->timestamps();
             $table->softDeletes();
         });

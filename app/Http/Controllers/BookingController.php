@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\BookingAction;
+use App\Services\BookingService;
 use App\Http\Requests\CreateBookingRequest;
 use App\Http\Requests\GetQuoteRequest;
 use App\Models\Booking;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(protected BookingAction $bookingAction) {}
+    public function __construct(protected BookingService $bookingService) {}
 
     /**
      * Get a price quote booking.
@@ -22,7 +23,7 @@ class BookingController extends Controller
      */
     public function getQuote(GetQuoteRequest $request): JsonResponse
     {
-        $quoteData = $this->bookingAction->getQuote($request->validated());
+        $quoteData = $this->bookingService->getQuote($request->validated());
 
         return $this->dataResponse('Quote retrieved successfully.', $quoteData);
     }
@@ -32,16 +33,21 @@ class BookingController extends Controller
      *
      * @unauthenticated
      */
-    public function store(CreateBookingRequest $request): JsonResponse
+    public function store(CreateBookingRequest $request)
     {
-        $booking = $this->bookingAction->createBooking($request->validated());
-
+        $booking = $this->bookingService->createBooking($request->validated());
+        $paymentIntent = $this->bookingService->createPaymentIntent($booking);
         return $this->dataResponse(
             'Booking created successfully. Please proceed to payment.',
             [
-                'booking_id' => $booking->id,
-                'booking_code' => $booking->code,
-                'price' => $booking->price,
+                'booking' => [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->code,
+                    'price' => $booking->price,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                ],
+                'payment' => $paymentIntent,
             ],
             201
         );
@@ -58,10 +64,64 @@ class BookingController extends Controller
             return $this->errorResponse('This booking has already been paid for.', 409);
         }
 
-        $paymentIntent = $this->bookingAction->createPaymentIntent($booking);
+        $paymentIntent = $this->bookingService->createPaymentIntent($booking);
 
-        return $this->dataResponse('Payment intent created successfully.', [
-            'clientSecret' => $paymentIntent->client_secret,
+        return $this->dataResponse('Payment intent created successfully.', $paymentIntent);
+    }
+
+    /**
+     * Confirm payment completion
+     * 
+     * This handles cases where webhook fails or needs manual confirmation
+     * @unauthenticated
+     */
+    public function confirmPayment(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'booking_id' => 'required|uuid|exists:bookings,id',
+            'payment_intent_id' => 'required|string',
         ]);
+
+        try {
+            $result = $this->bookingService->confirmPayment(
+                $validated['booking_id'],
+                $validated['payment_intent_id']
+            );
+
+            if ($result['success']) {
+                return $this->dataResponse(
+                    'Payment confirmed successfully.',
+                    [
+                        'booking' => $result['booking'],
+                        'payment_status' => 'paid'
+                    ]
+                );
+            } else {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Payment confirmation failed.',
+                    400
+                );
+            }
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Payment confirmation error: ' . $e->getMessage(),
+                422
+            );
+        }
+    }
+
+    /**
+     * Get booking details by ID or Code
+     * 
+     * @unauthenticated
+     */
+    public function show(string $id): JsonResponse
+    {
+        $booking = $this->bookingService->getBookingDetails($id);
+
+        return $this->dataResponse(
+            'Booking retrieved successfully.',
+            $booking
+        );
     }
 }

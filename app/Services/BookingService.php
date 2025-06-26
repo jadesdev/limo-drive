@@ -1,20 +1,24 @@
 <?php
 
-namespace App\Actions;
+namespace App\Services;
 
 use App\Http\Resources\Booking\DistanceBasedQuoteResource;
 use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
 use App\Models\Fleet;
+use App\Models\Payment;
 use App\Services\GoogleMapsService;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Str;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
+use Illuminate\Support\Facades\DB;
 
-class BookingAction
+class BookingService
 {
+
     /**
      * Get a quote for a trip based on service type and other parameters.
      *
@@ -75,7 +79,8 @@ class BookingAction
             ]);
         }
 
-        $vehicles = $fleets->map(function (Fleet $fleet) use ($distanceInMiles, $data, $durationText, $durationInMinutes) {
+        /** @var Collection<DistanceBasedQuoteResource> $vehicles */
+        return $vehicles = $fleets->map(function (Fleet $fleet) use ($distanceInMiles, $data, $durationText, $durationInMinutes) {
 
             $milageCost = $fleet->rate_per_mile * $distanceInMiles;
             $baseFare = $fleet->base_fee + $milageCost;
@@ -108,7 +113,9 @@ class BookingAction
             ];
         });
 
-        return DistanceBasedQuoteResource::collection($vehicles);
+        return DistanceBasedQuoteResource::collection(
+            $vehicles->map(fn($v) => (object) $v)
+        );
     }
 
     /**
@@ -135,7 +142,8 @@ class BookingAction
             ]);
         }
 
-        $vehicles = $fleets->map(function (Fleet $fleet) use ($hours) {
+        /** @var Collection<HourlyBasedQuoteResource> $vehicles */
+        return $vehicles = $fleets->map(function (Fleet $fleet) use ($hours) {
             $bookingHours = $hours;
 
             if ($bookingHours < $fleet->minimum_hours) {
@@ -166,7 +174,9 @@ class BookingAction
             ];
         });
 
-        return HourlyBasedQuoteResource::collection($vehicles);
+        return HourlyBasedQuoteResource::collection(
+            $vehicles->map(fn($v) => (object) $v)
+        );
     }
 
     /**
@@ -179,7 +189,16 @@ class BookingAction
      */
     public function createBooking(array $data): Booking
     {
-        $quoteData = $this->getQuote($data);
+        $quoteObject = [
+            'service_type' => $data['service_type'],
+            'fleet_id' => $data['fleet_id'],
+            'pickup_address' => $data['pickup']['address'] ?? null,
+            'dropoff_address' => $data['dropoff']['address'] ?? null,
+            'passenger_count' => $data['passengers'] ?? 1,
+            'bag_count' => $data['bags'] ?? 0,
+            'duration_hours' => $data['duration_hours'] ?? 1,
+        ];
+        $quoteData = $this->getQuote($quoteObject);
         $selectedFleetQuote = $quoteData->firstWhere('id', $data['fleet_id']);
 
         if (! $selectedFleetQuote) {
@@ -189,13 +208,38 @@ class BookingAction
         }
 
         $finalPrice = $selectedFleetQuote['price'];
-
-        $bookingData = array_merge($data, [
+        $bookingData = [
+            // Basic booking info
             'code' => 'BK-' . strtoupper(Str::random(9)),
+            'fleet_id' => $data['fleet_id'],
+            'service_type' => $data['service_type'],
             'price' => $finalPrice,
             'status' => 'pending_payment',
             'payment_status' => 'unpaid',
-        ]);
+            // Customer details
+            'customer_first_name' => $data['customer']['first_name'],
+            'customer_last_name' => $data['customer']['last_name'],
+            'customer_email' => $data['customer']['email'],
+            'customer_phone' => $data['customer']['phone'],
+            // Pickup details
+            'pickup_datetime' => $data['pickup']['datetime'],
+            'pickup_address' => $data['pickup']['address'],
+            'pickup_latitude' => $data['pickup']['latitude'] ?? null,
+            'pickup_longitude' => $data['pickup']['longitude'] ?? null,
+            // Dropoff details (if provided)
+            'dropoff_address' => $data['dropoff']['address'] ?? null,
+            'dropoff_latitude' => $data['dropoff']['latitude'] ?? null,
+            'dropoff_longitude' => $data['dropoff']['longitude'] ?? null,
+            // Trip details
+            'passenger_count' => $data['passengers'],
+            'bag_count' => $data['bags'],
+            'duration_hours' => $data['duration_hours'] ?? null,
+            // Optional fields
+            'is_accessible' => $data['accessible'] ?? false,
+            'is_return_service' => $data['return_service'] ?? false,
+            'payment_method' => $data['payment']['method'],
+            'notes' => $data['notes'] ?? null,
+        ];
 
         return Booking::create($bookingData);
     }
@@ -203,11 +247,11 @@ class BookingAction
     /**
      * Create a Stripe Payment Intent for a booking.
      */
-    public function createPaymentIntent(Booking $booking): PaymentIntent
+    public function createPaymentIntent(Booking $booking)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        return PaymentIntent::create([
+        $paymentIntent = PaymentIntent::create([
             'amount' => $booking->price * 100,
             'currency' => 'usd',
             'automatic_payment_methods' => [
@@ -218,6 +262,149 @@ class BookingAction
                 'booking_code' => $booking->code,
             ],
         ]);
+
+        return [
+            'intent' => $paymentIntent->id,
+            'client_secret' => $paymentIntent->client_secret,
+            'amount' => $paymentIntent->amount / 100,
+            'currency' => $paymentIntent->currency,
+        ];
+    }
+
+    /**
+     * Confirm payment and update booking status
+     * This is used as a fallback when webhook fails
+     */
+    public function confirmPayment(string $bookingId, string $paymentIntentId): array
+    {
+        try {
+            // Get the booking
+            $booking = Booking::findOrFail($bookingId);
+
+            // Verify payment intent with Stripe
+            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
+
+            // Check if payment was successful
+            if ($paymentIntent->status !== 'succeeded') {
+                return [
+                    'success' => false,
+                    'message' => 'Payment has not been completed yet.',
+                ];
+            }
+
+            // Verify this payment intent belongs to this booking
+            if ($paymentIntent->metadata->booking_id !== $booking->id) {
+                return [
+                    'success' => false,
+                    'message' => 'Payment does not match this booking.',
+                ];
+            }
+
+            // Update booking if not already confirmed
+            if ($booking->status === 'pending_payment') {
+                $booking->update([
+                    'status' => 'confirmed',
+                    'payment_status' => 'paid',
+                ]);
+
+                // Create payment record
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'stripe_payment_intent_id' => $paymentIntent->id,
+                    'amount' => $paymentIntent->amount / 100,
+                    'currency' => $paymentIntent->currency,
+                    'status' => 'completed',
+                    'payment_method' => 'stripe',
+                ]);
+            }
+
+            return [
+                'success' => true,
+                'booking' => [
+                    'id' => $booking->id,
+                    'code' => $booking->code,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to confirm payment: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get booking details by ID or Code
+     */
+    public function getBookingDetails($id)
+    {
+        if (Str::isUuid($id)) {
+            $booking = Booking::with(['fleet', 'latestPayment'])->findOrFail($id);
+        } else {
+            $booking = Booking::with(['fleet', 'latestPayment'])->where('code', $id)->firstOrFail();
+        }
+        return $booking;
+    }
+
+    /**
+     * Process webhook payment confirmation
+     * This is called from the webhook handler
+     */
+    public function processWebhookPayment(PaymentIntent $paymentIntent): bool
+    {
+        try {
+            $bookingId = $paymentIntent->metadata->booking_id ?? null;
+
+            if (!$bookingId) {
+                \Log::warning('Webhook payment intent missing booking_id', [
+                    'payment_intent_id' => $paymentIntent->id
+                ]);
+                return false;
+            }
+
+            $booking = Booking::find($bookingId);
+            if (!$booking) {
+                \Log::warning('Booking not found for webhook', [
+                    'booking_id' => $bookingId,
+                    'payment_intent_id' => $paymentIntent->id
+                ]);
+                return false;
+            }
+
+            // Update booking status
+            $booking->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+            ]);
+
+            // Create payment record
+            Payment::updateOrCreate(
+                ['stripe_payment_intent_id' => $paymentIntent->id],
+                [
+                    'booking_id' => $booking->id,
+                    'amount' => $paymentIntent->amount / 100,
+                    'currency' => $paymentIntent->currency,
+                    'status' => 'completed',
+                    'payment_method' => 'stripe',
+                ]
+            );
+
+            \Log::info('Booking payment confirmed via webhook', [
+                'booking_id' => $booking->id,
+                'booking_code' => $booking->code,
+                'payment_intent_id' => $paymentIntent->id
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Webhook payment processing failed', [
+                'payment_intent_id' => $paymentIntent->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
