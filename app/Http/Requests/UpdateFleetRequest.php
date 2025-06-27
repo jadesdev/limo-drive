@@ -33,11 +33,11 @@ class UpdateFleetRequest extends FormRequest
                 Rule::unique('fleets', 'slug')->ignore($fleetId),
             ],
             'description' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'thumbnail' => 'nullable|image|max:10048',
             'seats' => 'sometimes|required|integer|min:1|max:20',
             'bags' => 'sometimes|required|integer|min:0|max:50',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'images.*' => 'image|max:10048',
             'images_deleted' => 'nullable|array',
             'images_deleted.*' => 'string',
             'features' => 'nullable|array',
@@ -47,6 +47,10 @@ class UpdateFleetRequest extends FormRequest
             'specifications.*.value' => 'required|string|max:255',
             'is_active' => 'boolean',
             'order' => 'nullable|integer|min:1',
+            'base_fee' => 'nullable|numeric',
+            'rate_per_mile' => 'nullable|numeric',
+            'rate_per_hour' => 'nullable|numeric',
+            'minimum_hours' => 'nullable|integer|min:1',
         ];
     }
 

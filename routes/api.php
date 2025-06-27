@@ -1,12 +1,17 @@
 <?php
 
+use App\Http\Controllers\AdminBookingController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -17,13 +22,12 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 // Protected auth routes
 Route::prefix('auth')->controller(AuthController::class)->middleware('auth:sanctum')->group(function () {
     Route::post('/logout', 'logout');
-    // Route::post('/logout-all', 'logoutAll');
     Route::get('/user', 'user');
     Route::post('/refresh-token', 'refreshToken');
 });
 
 // Admin Profile
-Route::prefix('profile')->controller(ProfileController::class)->middleware('auth:sanctum')->group(function () {
+Route::prefix('profile')->controller(ProfileController::class)->middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/', 'show');
     Route::put('/', 'update');
     Route::post('/password', 'passwordUpdate');
@@ -48,8 +52,16 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware(['throt
 // Faqs
 Route::get('/faqs', [FaqController::class, 'index']);
 
+// Booking
+Route::controller(BookingController::class)->prefix('bookings')->group(function () {
+    Route::post('/quote', 'getQuote');
+    Route::post('/', 'store');
+    Route::post('/confirm-payment', 'confirmPayment');
+    Route::get('/{id}', 'show');
+});
+
 // Admin Routes
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
     // Services
     Route::controller(ServiceController::class)->prefix('services')->group(function () {
         Route::get('/', 'adminIndex');
@@ -90,4 +102,26 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     // Drivers
     Route::apiResource('drivers', DriverController::class);
+
+    // Bookings
+    Route::controller(AdminBookingController::class)->prefix('bookings')->group(function () {
+        Route::get('/', 'index');
+        Route::get('/calendar', 'calendar');
+        Route::get('/{booking}', 'adminShow');
+        Route::put('/{booking}/assign-driver', 'assignDriver');
+        Route::put('/{booking}', 'update');
+    });
+    // Payments
+    Route::apiResource('payments', PaymentController::class);
+
+    // Admin-only: Customer management
+    Route::prefix('customers')->controller(CustomerController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/{customer}', 'show');
+        Route::put('/{customer}', 'update');
+        Route::delete('/{customer}', 'destroy');
+    });
 });
+
+// Stripe Webhook
+Route::post('/stripe-webhook', [StripeWebhookController::class, 'handle']);

@@ -25,17 +25,21 @@ class StoreFleetRequest extends FormRequest
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:fleets,slug',
             'description' => 'nullable|string',
-            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'thumbnail' => 'required|image|max:10048',
             'seats' => 'required|integer|min:1|max:20',
             'bags' => 'required|integer|min:0|max:50',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'images.*' => 'image|max:10048',
             'features' => 'nullable|array',
             'features.*' => 'string|max:255',
             'specifications' => 'nullable|array',
             'specifications.*.label' => 'required|string|max:255',
             'specifications.*.value' => 'required|string|max:255',
             'order' => 'nullable|integer|min:1',
+            'base_fee' => 'nullable|numeric',
+            'rate_per_mile' => 'nullable|numeric',
+            'rate_per_hour' => 'nullable|numeric',
+            'minimum_hours' => 'nullable|integer|min:1',
         ];
     }
 

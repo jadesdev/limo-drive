@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Service;
+use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -10,13 +11,14 @@ use Illuminate\Support\Str;
 
 class ServiceAction
 {
+    public function __construct(protected FileUploadService $fileUploadService) {}
+
     /**
      * Create a new service with the given data.
      */
     public function create(array $data): Service
     {
         return DB::transaction(function () use ($data) {
-            // Handle file uploads
             $fileFields = [
                 'banner_image',
                 'problem_solved_image',
@@ -26,16 +28,13 @@ class ServiceAction
 
             foreach ($fileFields as $field) {
                 if (isset($data[$field]) && $data[$field] instanceof UploadedFile) {
-                    $data[$field] = $this->uploadFile($data[$field], 'services');
+                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services');
                 }
             }
 
-            // Generate slug if not provided
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
-
-            // Ensure arrays are properly encoded
             $data = $this->prepareArrayData($data);
 
             return Service::create($data);
@@ -48,7 +47,6 @@ class ServiceAction
     public function update(Service $service, array $data): Service
     {
         return DB::transaction(function () use ($service, $data) {
-            // Handle file uploads
             $fileFields = [
                 'banner_image',
                 'problem_solved_image',
@@ -58,37 +56,19 @@ class ServiceAction
 
             foreach ($fileFields as $field) {
                 if (isset($data[$field]) && $data[$field] instanceof UploadedFile) {
-                    // Delete old file if exists
                     if ($service->$field) {
-                        Storage::disk('uploads')->delete($service->$field);
+                        $this->fileUploadService->delete($service->$field);
                     }
-                    $data[$field] = $this->uploadFile($data[$field], 'services');
-                } elseif (isset($data[$field]) && $data[$field] === null) {
-                    // Handle file removal if field is explicitly set to null
-                    if ($service->$field) {
-                        Storage::disk('uploads')->delete($service->$field);
-                        $data[$field] = null;
-                    }
+                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services');
                 }
             }
 
-            // Ensure arrays are properly encoded
             $data = $this->prepareArrayData($data);
 
             $service->update($data);
 
             return $service->fresh();
         });
-    }
-
-    /**
-     * Upload a file to the specified directory.
-     */
-    protected function uploadFile(UploadedFile $file, string $directory): string
-    {
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-
-        return $file->storeAs($directory, $filename, 'uploads');
     }
 
     /**

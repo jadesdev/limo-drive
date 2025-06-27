@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'User',
             'email' => 'admin@example.com',
             'password' => 'Password123',
+            'role' => 'admin',
         ]);
 
         $this->call([
@@ -27,6 +28,9 @@ class DatabaseSeeder extends Seeder
             FleetSeeder::class,
             FaqSeeder::class,
             DriverSeeder::class,
+            CustomerSeeder::class,
+            BookingSeeder::class,
+            PaymentSeeder::class,
         ]);
     }
 }

@@ -4,11 +4,12 @@ namespace App\Services;
 
 use App\Models\Fleet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FleetService
 {
+    public function __construct(private FileUploadService $fileUploadService) {}
+
     /**
      * Create a new fleet
      */
@@ -21,14 +22,14 @@ class FleetService
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $this->uploadFile($request->file('thumbnail'), 'fleets');
+            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets');
         }
 
         // Handle multiple images upload
         if ($request->hasFile('images')) {
             $imagePaths = [];
             foreach ($request->file('images') as $image) {
-                $imagePaths[] = $this->uploadFile($image, 'fleets');
+                $imagePaths[] = $this->fileUploadService->upload($image, 'fleets');
             }
             $validated['images'] = $imagePaths;
         }
@@ -55,9 +56,9 @@ class FleetService
         if ($request->hasFile('thumbnail')) {
             // Delete old thumbnail
             if ($fleet->thumbnail) {
-                Storage::disk('uploads')->delete($fleet->thumbnail);
+                $this->fileUploadService->delete($fleet->thumbnail);
             }
-            $validated['thumbnail'] = $this->uploadFile($request->file('thumbnail'), 'fleets');
+            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets');
         }
 
         // Handle selective image deletion
@@ -67,7 +68,7 @@ class FleetService
         if (! empty($imagesToDelete)) {
             foreach ($imagesToDelete as $imgPath) {
                 if (in_array($imgPath, $existingImages)) {
-                    Storage::disk('uploads')->delete($imgPath);
+                    $this->fileUploadService->delete($imgPath);
                     $existingImages = array_values(array_diff($existingImages, [$imgPath]));
                 }
             }
@@ -76,7 +77,7 @@ class FleetService
         // Handle new images upload (append to existing, not replace)
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $existingImages[] = $this->uploadFile($image, 'fleets');
+                $existingImages[] = $this->fileUploadService->upload($image, 'fleets');
             }
         }
 
@@ -94,26 +95,15 @@ class FleetService
     {
         // Delete associated files
         if ($fleet->thumbnail) {
-            Storage::disk('uploads')->delete($fleet->thumbnail);
+            $this->fileUploadService->delete($fleet->thumbnail);
         }
 
         if (is_array($fleet->images)) {
             foreach ($fleet->images as $image) {
-                Storage::disk('uploads')->delete($image);
+                $this->fileUploadService->delete($image);
             }
         }
 
         $fleet->delete();
-    }
-
-    /**
-     * Helper method to upload files
-     */
-    private function uploadFile($file, $directory = 'fleets')
-    {
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs($directory, $filename, 'uploads');
-
-        return $path;
     }
 }
