@@ -113,7 +113,7 @@ class BookingService
         });
 
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn ($v) => (object) $v)
+            $vehicles->map(fn($v) => (object) $v)
         );
     }
 
@@ -174,7 +174,7 @@ class BookingService
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn ($v) => (object) $v)
+            $vehicles->map(fn($v) => (object) $v)
         );
     }
 
@@ -245,7 +245,7 @@ class BookingService
             // Optional fields
             'is_accessible' => $data['accessible'] ?? false,
             'is_return_service' => $data['return_service'] ?? false,
-            'payment_method' => $data['payment_method'],
+            'payment_method' => 'stripe',
             'notes' => $data['notes'] ?? null,
         ];
 
@@ -295,6 +295,7 @@ class BookingService
         try {
             // Get the booking
             $booking = Booking::findOrFail($bookingId);
+            Stripe::setApiKey(config('services.stripe.secret'));
 
             // Verify payment intent with Stripe
             $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
@@ -325,11 +326,16 @@ class BookingService
                 // Create payment record
                 Payment::create([
                     'booking_id' => $booking->id,
-                    'stripe_payment_intent_id' => $paymentIntent->id,
+                    'payment_intent_id' => $paymentIntent->id,
                     'amount' => $paymentIntent->amount / 100,
                     'currency' => $paymentIntent->currency,
+                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
+                    'customer_email' => $booking->customer?->email,
                     'status' => 'completed',
                     'payment_method' => 'stripe',
+                    'gateway_name' => 'stripe',
+                    'gateway_ref' => $paymentIntent->payment_method,
+                    'gateway_payload' => $paymentIntent,
                 ]);
             }
 
@@ -368,7 +374,7 @@ class BookingService
      * Process webhook payment confirmation
      * This is called from the webhook handler
      */
-    public function processWebhookPayment(PaymentIntent $paymentIntent): bool
+    public function processWebhookPayment($paymentIntent): bool
     {
         try {
             $bookingId = $paymentIntent->metadata->booking_id ?? null;
@@ -399,13 +405,18 @@ class BookingService
 
             // Create payment record
             Payment::updateOrCreate(
-                ['stripe_payment_intent_id' => $paymentIntent->id],
+                ['payment_intent_id' => $paymentIntent->id],
                 [
                     'booking_id' => $booking->id,
                     'amount' => $paymentIntent->amount / 100,
                     'currency' => $paymentIntent->currency,
+                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
+                    'customer_email' => $booking->customer?->email,
                     'status' => 'completed',
                     'payment_method' => 'stripe',
+                    'gateway_name' => 'stripe',
+                    'gateway_ref' => $paymentIntent->payment_method,
+                    'gateway_payload' => $paymentIntent,
                 ]
             );
 

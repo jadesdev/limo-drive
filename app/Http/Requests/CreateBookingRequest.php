@@ -48,7 +48,6 @@ class CreateBookingRequest extends FormRequest
             'accessible' => ['sometimes', 'boolean'],
             'return_service' => ['sometimes', 'boolean'],
             // pricing
-            'payment_method' => ['required', 'string'],
             // additional info
             'notes' => ['nullable', 'string', 'max:1000'],
             'duration_hours' => ['required_if:service_type,wedding,event,other', 'nullable', 'integer', 'min:1', 'max:24'],
