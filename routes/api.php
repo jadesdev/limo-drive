@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminBookingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
@@ -103,8 +104,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     Route::apiResource('drivers', DriverController::class);
 
     // Bookings
-    Route::controller(BookingController::class)->prefix('bookings')->group(function () {
+    Route::controller(AdminBookingController::class)->prefix('bookings')->group(function () {
         Route::get('/', 'index');
+        Route::get('/calendar', 'calendar');
         Route::get('/{booking}', 'adminShow');
         Route::put('/{booking}/assign-driver', 'assignDriver');
         Route::put('/{booking}', 'update');

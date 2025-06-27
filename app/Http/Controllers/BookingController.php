@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateBookingRequest;
 use App\Http\Requests\GetQuoteRequest;
-use App\Http\Requests\UpdateBookingRequest;
-use App\Http\Resources\Booking\BookingResource;
 use App\Models\Booking;
 use App\Services\BookingService;
 use App\Traits\ApiResponse;
@@ -126,91 +124,6 @@ class BookingController extends Controller
         return $this->dataResponse(
             'Booking retrieved successfully.',
             $booking
-        );
-    }
-
-    /**
-     * Admin booking History
-     */
-    public function index(Request $request): JsonResponse
-    {
-        $request->validate([
-            'status' => 'nullable|string|in:pending_payment,paid,cancelled',
-            'driver_id' => 'nullable|uuid|exists:drivers,id',
-            'payment_status' => 'nullable|string|in:pending_payment,paid,cancelled',
-        ]);
-        $perPage = $request->input('per_page', 20);
-        $query = Booking::query();
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('driver_id')) {
-            $query->where('driver_id', $request->driver_id);
-        }
-
-        if ($request->has('payment_status')) {
-            $query->whereHas('payment', function ($query) use ($request) {
-                $query->where('status', $request->payment_status);
-            });
-        }
-
-        $bookings = $query->with(['fleet', 'driver', 'payments', 'latestPayment'])->latest()->paginate($perPage);
-
-        return $this->paginatedResponse(
-            'Bookings retrieved successfully.',
-            BookingResource::collection($bookings),
-            $bookings,
-        );
-    }
-
-    /**
-     * Booking details (Admin)
-     *
-     * Get booking details by ID or Code
-     */
-    public function adminShow(string $id): JsonResponse
-    {
-        $booking = $this->bookingService->getBookingDetails($id);
-
-        return $this->dataResponse(
-            'Booking retrieved successfully.',
-            $booking
-        );
-    }
-
-    /**
-     * Assign Driver to Booking
-     */
-    public function assignDriver(Request $request, Booking $booking): JsonResponse
-    {
-        $validated = $request->validate([
-            'driver_id' => 'required|uuid|exists:drivers,id',
-        ]);
-
-        $booking->update([
-            'driver_id' => $validated['driver_id'],
-        ]);
-
-        return $this->dataResponse(
-            'Driver assigned successfully.',
-            $booking
-        );
-    }
-
-    /**
-     * Update Booking
-     */
-    public function update(UpdateBookingRequest $request, Booking $booking): JsonResponse
-    {
-        $validated = $request->validated();
-
-        $updatedBooking = $this->bookingService->updateBooking($validated, $booking);
-
-        return $this->dataResponse(
-            'Booking updated successfully.',
-            $updatedBooking
         );
     }
 }

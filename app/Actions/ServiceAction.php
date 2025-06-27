@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 
 class ServiceAction
 {
-
     public function __construct(protected FileUploadService $fileUploadService) {}
 
     /**
@@ -71,7 +70,6 @@ class ServiceAction
             return $service->fresh();
         });
     }
-
 
     /**
      * Prepare array data for storage.

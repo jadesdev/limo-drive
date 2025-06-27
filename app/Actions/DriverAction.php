@@ -6,12 +6,10 @@ use App\Models\Driver;
 use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class DriverAction
 {
-    function __construct(protected FileUploadService $fileUploadService) {}
+    public function __construct(protected FileUploadService $fileUploadService) {}
 
     /**
      * Create a new driver with the given data.
@@ -30,6 +28,7 @@ class DriverAction
             if (! isset($data['is_available'])) {
                 $data['is_available'] = true;
             }
+
             return Driver::create($data);
         });
     }
