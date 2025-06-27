@@ -17,7 +17,7 @@ class ImageController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
             'folder' => 'sometimes|string|max:255',
         ]);
 

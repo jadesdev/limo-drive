@@ -13,7 +13,7 @@ class FleetService
     /**
      * Create a new fleet
      */
-    public function create(array $validated, Request $request): Fleet
+    public function create(array $validated, Request $request)
     {
         // Generate slug from name if not provided
         if (empty($validated['slug'])) {
@@ -22,14 +22,14 @@ class FleetService
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets');
+            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets')['file_path'];
         }
 
         // Handle multiple images upload
         if ($request->hasFile('images')) {
             $imagePaths = [];
             foreach ($request->file('images') as $image) {
-                $imagePaths[] = $this->fileUploadService->upload($image, 'fleets');
+                $imagePaths[] = $this->fileUploadService->upload($image, 'fleets')['file_path'];
             }
             $validated['images'] = $imagePaths;
         }
@@ -38,7 +38,6 @@ class FleetService
         if (empty($validated['order'])) {
             $validated['order'] = Fleet::max('order') + 1;
         }
-
         cache()->forget('all_active_fleets');
 
         return Fleet::create($validated);
@@ -60,7 +59,7 @@ class FleetService
             if ($fleet->thumbnail) {
                 $this->fileUploadService->delete($fleet->thumbnail);
             }
-            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets');
+            $validated['thumbnail'] = $this->fileUploadService->upload($request->file('thumbnail'), 'fleets')['file_path'];
         }
 
         // Handle selective image deletion
@@ -79,7 +78,7 @@ class FleetService
         // Handle new images upload (append to existing, not replace)
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $existingImages[] = $this->fileUploadService->upload($image, 'fleets');
+                $existingImages[] = $this->fileUploadService->upload($image, 'fleets')['file_path'];
             }
         }
 

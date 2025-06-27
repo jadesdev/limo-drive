@@ -33,7 +33,7 @@ class UpdateFleetRequest extends FormRequest
                 Rule::unique('fleets', 'slug')->ignore($fleetId),
             ],
             'description' => 'nullable|string',
-            'thumbnail' => 'nullable|image|max:10048',
+            'thumbnail' => 'nullable|file|max:10048',
             'seats' => 'sometimes|required|integer|min:1|max:20',
             'bags' => 'sometimes|required|integer|min:0|max:50',
             'images' => 'nullable|array',

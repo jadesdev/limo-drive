@@ -18,7 +18,7 @@ class DriverAction
     {
         return DB::transaction(function () use ($data) {
             if (isset($data['profile_image']) && $data['profile_image'] instanceof UploadedFile) {
-                $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles');
+                $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles')['file_path'];
             }
 
             if (! isset($data['status'])) {
@@ -44,7 +44,7 @@ class DriverAction
                     if ($driver->profile_image) {
                         $this->fileUploadService->delete($driver->profile_image);
                     }
-                    $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles');
+                    $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles')['file_path'];
                 }
             }
 

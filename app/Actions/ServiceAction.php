@@ -28,7 +28,7 @@ class ServiceAction
 
             foreach ($fileFields as $field) {
                 if (isset($data[$field]) && $data[$field] instanceof UploadedFile) {
-                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services');
+                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services')['file_path'];
                 }
             }
 
@@ -59,7 +59,7 @@ class ServiceAction
                     if ($service->$field) {
                         $this->fileUploadService->delete($service->$field);
                     }
-                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services');
+                    $data[$field] = $this->fileUploadService->upload($data[$field], 'services')['file_path'];
                 }
             }
 
