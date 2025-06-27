@@ -17,7 +17,12 @@ class FleetService
     {
         // Generate slug from name if not provided
         if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
+            $slug = Str::slug($validated['name']);
+            $count = 1;
+            while (Fleet::where('slug', $slug)->exists()) {
+                $slug .= '-' . $count++;
+            }
+            $validated['slug'] = $slug;
         }
 
         // Handle thumbnail upload
