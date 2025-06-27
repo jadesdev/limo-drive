@@ -73,7 +73,7 @@ class FleetController extends Controller
     public function store(StoreFleetRequest $request)
     {
         $validated = $request->validated();
-        return $fleet = $this->fleetService->create($validated, $request);
+        $fleet = $this->fleetService->create($validated, $request);
 
         return $this->dataResponse('Fleet created successfully', FleetResource::make($fleet), 201);
     }
