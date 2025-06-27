@@ -68,7 +68,7 @@ class AdminBookingController extends Controller
             ->with(['customer:id,first_name,last_name'])
             ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);
 
-        if (!empty($validated['status'])) {
+        if (! empty($validated['status'])) {
             $dbStatus = match ($validated['status']) {
                 'in_progress' => 'pending_payment',
                 'rejected' => 'cancelled',
@@ -106,7 +106,7 @@ class AdminBookingController extends Controller
                     'booking_code' => $booking->code,
                     'status' => $booking->status,
                     'location' => $booking->pickup_address,
-                ]
+                ],
             ];
         });
 

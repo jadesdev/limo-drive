@@ -56,6 +56,7 @@ class FileUploadService
     public function localDelete($fileId)
     {
         Storage::disk('uploads')->delete($fileId);
+
         return true;
     }
 
