@@ -223,8 +223,6 @@ class BookingService
             $customer->save();
         }
         $bookingData = [
-            // Basic booking info
-            'code' => 'BK-' . strtoupper(Str::random(9)),
             'fleet_id' => $data['fleet_id'],
             'service_type' => $data['service_type'],
             'price' => $finalPrice,
@@ -247,7 +245,7 @@ class BookingService
             // Optional fields
             'is_accessible' => $data['accessible'] ?? false,
             'is_return_service' => $data['return_service'] ?? false,
-            'payment_method' => $data['payment']['method'],
+            'payment_method' => $data['payment_method'],
             'notes' => $data['notes'] ?? null,
         ];
 

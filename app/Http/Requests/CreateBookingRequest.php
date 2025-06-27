@@ -48,9 +48,7 @@ class CreateBookingRequest extends FormRequest
             'accessible' => ['sometimes', 'boolean'],
             'return_service' => ['sometimes', 'boolean'],
             // pricing
-            'payment' => ['required', 'array'],
-            'payment.method' => ['required', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'payment_method' => ['required', 'string'],
             // additional info
             'notes' => ['nullable', 'string', 'max:1000'],
             'duration_hours' => ['required_if:service_type,wedding,event,other', 'nullable', 'integer', 'min:1', 'max:24'],
@@ -100,8 +98,8 @@ class CreateBookingRequest extends FormRequest
             'bags.max' => 'Maximum 10 bags allowed',
 
             // Payment
-            'payment.method.required' => 'Payment method is required',
-            'payment.method.in' => 'Invalid payment method',
+            'payment_method.required' => 'Payment method is required',
+            'payment_method.in' => 'Invalid payment method',
             'payment.intent_id.required_if' => 'Payment intent is required for card payments',
             'payment.intent_id.starts_with' => 'Invalid payment intent',
             'price.required' => 'Price is required',

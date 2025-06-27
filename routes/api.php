@@ -26,7 +26,7 @@ Route::prefix('auth')->controller(AuthController::class)->middleware('auth:sanct
 });
 
 // Admin Profile
-Route::prefix('profile')->controller(ProfileController::class)->middleware('auth:sanctum')->group(function () {
+Route::prefix('profile')->controller(ProfileController::class)->middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/', 'show');
     Route::put('/', 'update');
     Route::post('/password', 'passwordUpdate');
@@ -60,7 +60,7 @@ Route::controller(BookingController::class)->prefix('bookings')->group(function 
 });
 
 // Admin Routes
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
     // Services
     Route::controller(ServiceController::class)->prefix('services')->group(function () {
         Route::get('/', 'adminIndex');

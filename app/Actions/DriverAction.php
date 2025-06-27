@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Driver;
+use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -10,28 +11,25 @@ use Illuminate\Support\Str;
 
 class DriverAction
 {
+    function __construct(protected FileUploadService $fileUploadService) {}
+
     /**
      * Create a new driver with the given data.
      */
     public function create(array $data): Driver
     {
         return DB::transaction(function () use ($data) {
-            // Handle profile image upload
             if (isset($data['profile_image']) && $data['profile_image'] instanceof UploadedFile) {
-                $data['profile_image'] = $this->uploadFile($data['profile_image'], 'drivers/profiles');
+                $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles');
             }
 
-            // Set default status if not provided
             if (! isset($data['status'])) {
                 $data['status'] = 'active';
             }
 
-            // Set default is_available if not provided
             if (! isset($data['is_available'])) {
                 $data['is_available'] = true;
             }
-
-            // Create the driver
             return Driver::create($data);
         });
     }
@@ -42,24 +40,15 @@ class DriverAction
     public function update(Driver $driver, array $data): Driver
     {
         return DB::transaction(function () use ($driver, $data) {
-            // Handle profile image update
             if (isset($data['profile_image'])) {
                 if ($data['profile_image'] instanceof UploadedFile) {
-                    // Delete old file if exists
                     if ($driver->profile_image) {
-                        Storage::disk('uploads')->delete($driver->profile_image);
+                        $this->fileUploadService->delete($driver->profile_image);
                     }
-                    $data['profile_image'] = $this->uploadFile($data['profile_image'], 'drivers/profiles');
-                } elseif ($data['profile_image'] === null) {
-                    // Remove the profile image
-                    if ($driver->profile_image) {
-                        Storage::disk('uploads')->delete($driver->profile_image);
-                        $data['profile_image'] = null;
-                    }
+                    $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles');
                 }
             }
 
-            // Update the driver
             $driver->update($data);
 
             return $driver->fresh();
@@ -72,12 +61,10 @@ class DriverAction
     public function delete(Driver $driver): bool
     {
         return DB::transaction(function () use ($driver) {
-            // Delete associated files
             if ($driver->profile_image) {
-                Storage::disk('uploads')->delete($driver->profile_image);
+                $this->fileUploadService->delete($driver->profile_image);
             }
 
-            // Delete the driver (soft delete)
             return $driver->delete();
         });
     }
@@ -102,21 +89,6 @@ class DriverAction
         return $driver->update(['is_available' => $isAvailable]);
     }
 
-    /**
-     * Upload a file to the specified directory.
-     */
-    protected function uploadFile(UploadedFile $file, string $directory): string
-    {
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-
-        return $file->storeAs($directory, $filename, 'uploads');
-    }
-
-    /**
-     * Get all active and available drivers.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
     /**
      * Get all active and available drivers.
      *

@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ExceptionHandler;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ForceJsonApi;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             ForceJsonApi::class,
         ]);
+        $middleware->alias([
+            'admin' => AdminMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(fn (Throwable $exception) => (new ExceptionHandler)->handle($exception));
+        $exceptions->render(fn(Throwable $exception) => (new ExceptionHandler)->handle($exception));
     })->create();
