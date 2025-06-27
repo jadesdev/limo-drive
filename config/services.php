@@ -36,7 +36,7 @@ return [
     ],
 
     'google_maps' => [
-        'api_key' => env('GOOGLE_MAPS_API_KEY', 'AIzaSyB41DRUbKW4nM5-WFkK4oMq2bBzYm8bBzY'),
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
     'stripe' => [

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Storage;
 
 class FileUploadService
 {
@@ -54,12 +55,8 @@ class FileUploadService
 
     public function localDelete($fileId)
     {
-        $path = public_path('uploads/' . $fileId);
-        if (file_exists($path)) {
-            unlink($path);
-        }
-
-        return $path;
+        Storage::disk('uploads')->delete($fileId);
+        return true;
     }
 
     public function localAssetUrl(string $path, $secure = null)

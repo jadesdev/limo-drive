@@ -17,8 +17,8 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'status' => 'string|in:pending_payment,paid,failed,cancelled',
-            'search' => 'string',
+            'status' => 'nullable|string|in:unpaid,paid,failed,cancelled,all',
+            'search' => 'nullable|string',
         ]);
 
         $perPage = $request->input('per_page', 20);
@@ -26,13 +26,13 @@ class PaymentController extends Controller
 
         $query->with('booking');
 
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->input('status') !== 'all') {
             $query->where('status', $request->input('status'));
         }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->whereHas('booking', function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('customer_name', 'like', "%{$search}%")
                     ->orWhere('customer_email', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%");

@@ -64,13 +64,6 @@ class StripeWebhookController extends Controller
         }
 
         return response('Webhook handled', 200);
-
-        if ($event->type === 'payment_intent.succeeded') {
-            $paymentIntent = $event->data->object;
-            $this->handlePaymentSucceeded($paymentIntent);
-        }
-
-        return response('Webhook Handled', 200);
     }
 
     /**

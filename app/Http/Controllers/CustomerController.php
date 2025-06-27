@@ -26,10 +26,12 @@ class CustomerController extends Controller
         $query = Customer::query();
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
         }
         if ($request->filled('start_date')) {
             $query->where('last_active', '>=', $request->input('start_date'));

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Str;
 
 class Payment extends Model
 {
@@ -80,6 +81,6 @@ class Payment extends Model
 
     public static function generatePaymentCode()
     {
-        return 'PAY-' . strtoupper(substr(md5(uniqid()), 0, 9));
+        return 'PAY-' . strtoupper(Str::random(9));
     }
 }

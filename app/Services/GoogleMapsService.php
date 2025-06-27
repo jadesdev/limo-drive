@@ -51,7 +51,8 @@ class GoogleMapsService
 
         $data = $response->json();
 
-        if ($data['status'] !== 'OK' || empty($data['rows'][0]['elements'][0]['status'] === 'ZERO_RESULTS')) {
+        // if ($data['status'] !== 'OK' || empty($data['rows'][0]['elements'][0]['status'] === 'ZERO_RESULTS')) {
+        if ($data['rows'][0]['elements'][0]['status'] === 'ZERO_RESULTS') {
             throw ValidationException::withMessages([
                 'route' => ['Could not find a valid route between the specified locations. Please check the addresses.'],
             ]);
