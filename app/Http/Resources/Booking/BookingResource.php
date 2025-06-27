@@ -26,13 +26,16 @@ class BookingResource extends JsonResource
             // Pricing
             'price' => $this->price,
             // Customer details
-            'customer' => [
-                'first_name' => $this->customer_first_name,
-                'last_name' => $this->customer_last_name,
-                'full_name' => $this->name,
-                'email' => $this->customer_email,
-                'phone' => $this->customer_phone,
-            ],
+            'customer' => $this->customer ? [
+                'first_name' => $this->customer->first_name,
+                'last_name' => $this->customer->last_name,
+                'full_name' => trim(($this->customer->first_name ?? '') . ' ' . ($this->customer->last_name ?? '')),
+                'email' => $this->customer->email,
+                'phone' => $this->customer->phone,
+                'language' => $this->customer->language,
+                'last_active' => $this->customer->last_active,
+                'bookings_count' => $this->customer->bookings_count,
+            ] : null,
 
             // Trip details
             'pickup' => [
@@ -64,7 +67,7 @@ class BookingResource extends JsonResource
             'payment_method' => $this->payment_method,
             'notes' => $this->notes,
 
-            'fleet' => new FleetResource($this->whenLoaded('fleet')),
+            'fleet' => new ShortFleetResource($this->whenLoaded('fleet')),
 
             // Driver details
             'driver' => new DriverResource($this->whenLoaded('driver')),

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Http\Resources\Booking\DistanceBasedQuoteResource;
 use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Fleet;
 use App\Models\Payment;
 use Illuminate\Support\Collection;
@@ -206,6 +207,21 @@ class BookingService
         }
 
         $finalPrice = $selectedFleetQuote['price'];
+        // Find or create customer by email
+        $customerData = $data['customer'] ?? [];
+        $customer = null;
+        if (! empty($customerData['email'])) {
+            $customer = Customer::firstOrNew(['email' => $customerData['email']]);
+            $customer->first_name = $customerData['first_name'] ?? $customer->first_name;
+            $customer->last_name = $customerData['last_name'] ?? $customer->last_name;
+            $customer->phone = $customerData['phone'] ?? $customer->phone;
+            $customer->language = $customerData['language'] ?? $customer->language;
+            $customer->last_active = now();
+            $customer->save();
+            // Update bookings_count
+            $customer->bookings_count = $customer->bookings()->count();
+            $customer->save();
+        }
         $bookingData = [
             // Basic booking info
             'code' => 'BK-' . strtoupper(Str::random(9)),
@@ -214,11 +230,7 @@ class BookingService
             'price' => $finalPrice,
             'status' => 'pending_payment',
             'payment_status' => 'unpaid',
-            // Customer details
-            'customer_first_name' => $data['customer']['first_name'],
-            'customer_last_name' => $data['customer']['last_name'],
-            'customer_email' => $data['customer']['email'],
-            'customer_phone' => $data['customer']['phone'],
+            'customer_id' => $customer ? $customer->id : null,
             // Pickup details
             'pickup_datetime' => $data['pickup']['datetime'],
             'pickup_address' => $data['pickup']['address'],
@@ -239,7 +251,14 @@ class BookingService
             'notes' => $data['notes'] ?? null,
         ];
 
-        return Booking::create($bookingData);
+        $booking = Booking::create($bookingData);
+        if ($customer) {
+            $customer->bookings_count = $customer->bookings()->count();
+            $customer->last_active = now();
+            $customer->save();
+        }
+
+        return $booking;
     }
 
     /**
@@ -434,8 +453,40 @@ class BookingService
      */
     public function updateBooking(array $data, Booking $booking): Booking
     {
-        // Map nested request data to flat columns
         $update = [];
+
+        // Customer Details
+        if (isset($data['customer']) && ! empty($data['customer']['email'])) {
+            $customerData = $data['customer'];
+            $currentCustomer = $booking->customer;
+            if ($currentCustomer && $currentCustomer->email === $customerData['email']) {
+                // Update existing customer fields
+                if (isset($customerData['first_name'])) {
+                    $currentCustomer->first_name = $customerData['first_name'];
+                }
+                if (isset($customerData['last_name'])) {
+                    $currentCustomer->last_name = $customerData['last_name'];
+                }
+                if (isset($customerData['phone'])) {
+                    $currentCustomer->phone = $customerData['phone'];
+                }
+                if (isset($customerData['language'])) {
+                    $currentCustomer->language = $customerData['language'];
+                }
+                $currentCustomer->last_active = now();
+                $currentCustomer->save();
+            } else {
+                // Find or create new customer by email
+                $customer = Customer::firstOrNew(['email' => $customerData['email']]);
+                $customer->first_name = $customerData['first_name'] ?? $customer->first_name;
+                $customer->last_name = $customerData['last_name'] ?? $customer->last_name;
+                $customer->phone = $customerData['phone'] ?? $customer->phone;
+                $customer->language = $customerData['language'] ?? $customer->language;
+                $customer->last_active = now();
+                $customer->save();
+                $update['customer_id'] = $customer->id;
+            }
+        }
 
         // Booking Choices
         if (isset($data['service_type'])) {
@@ -443,23 +494,6 @@ class BookingService
         }
         if (isset($data['fleet_id'])) {
             $update['fleet_id'] = $data['fleet_id'];
-        }
-
-        // Customer Details
-        if (isset($data['customer'])) {
-            $customer = $data['customer'];
-            if (isset($customer['first_name'])) {
-                $update['customer_first_name'] = $customer['first_name'];
-            }
-            if (isset($customer['last_name'])) {
-                $update['customer_last_name'] = $customer['last_name'];
-            }
-            if (isset($customer['email'])) {
-                $update['customer_email'] = $customer['email'];
-            }
-            if (isset($customer['phone'])) {
-                $update['customer_phone'] = $customer['phone'];
-            }
         }
 
         // Trip Details

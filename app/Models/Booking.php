@@ -21,14 +21,11 @@ class Booking extends Model
         'code',
         'fleet_id',
         'driver_id',
+        'customer_id',
         'service_type',
         'is_accessible',
         'is_return_service',
         'duration_hours',
-        'customer_first_name',
-        'customer_last_name',
-        'customer_email',
-        'customer_phone',
         'pickup_datetime',
         'pickup_address',
         'pickup_latitude',
@@ -56,6 +53,13 @@ class Booking extends Model
         'is_return_service' => 'boolean',
     ];
 
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['customer'];
+
     public function getNameAttribute()
     {
         return $this->customer_first_name . ' ' . $this->customer_last_name;
@@ -67,6 +71,14 @@ class Booking extends Model
     public function fleet(): BelongsTo
     {
         return $this->belongsTo(Fleet::class);
+    }
+
+    /**
+     * Get the customer associated with the booking.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     /**

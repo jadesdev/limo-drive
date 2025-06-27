@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
@@ -110,6 +111,14 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     });
     // Payments
     Route::apiResource('payments', PaymentController::class);
+
+    // Admin-only: Customer management
+    Route::prefix('customers')->controller(CustomerController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/{customer}', 'show');
+        Route::put('/{customer}', 'update');
+        Route::delete('/{customer}', 'destroy');
+    });
 });
 
 // Stripe Webhook

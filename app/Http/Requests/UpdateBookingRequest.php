@@ -30,8 +30,9 @@ class UpdateBookingRequest extends FormRequest
             'customer' => ['sometimes', 'array'],
             'customer.first_name' => ['sometimes', 'string', 'max:255'],
             'customer.last_name' => ['sometimes', 'string', 'max:255'],
-            'customer.email' => ['sometimes', 'email:rfc,dns', 'max:255'],
+            'customer.email' => ['required_with:customer', 'email:rfc,dns', 'max:255'],
             'customer.phone' => ['sometimes', 'string', 'regex:/^\+?[0-9\s\-\(\)]{10,20}$/'],
+            'customer.language' => ['sometimes', 'string', 'max:30'],
 
             // Trip Details
             'pickup' => ['sometimes', 'array'],
