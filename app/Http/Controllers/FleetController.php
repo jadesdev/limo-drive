@@ -8,6 +8,7 @@ use App\Http\Resources\FleetResource;
 use App\Models\Fleet;
 use App\Services\FleetService;
 use App\Traits\ApiResponse;
+use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -24,7 +25,9 @@ class FleetController extends Controller
      */
     public function index(Request $request)
     {
-        $fleets = Fleet::active()->orderBy('order', 'asc')->get();
+        $fleets = Cache::remember('all_active_fleets', now()->addMinutes(20), function () {
+            return Fleet::active()->orderBy('order', 'asc')->get();
+        });
 
         return $this->dataResponse('All Fleets', FleetResource::collection($fleets));
     }
@@ -50,9 +53,10 @@ class FleetController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        $fleets = Fleet::orderBy('order', 'asc')->get();
+        $perPage = $request->input('per_page', 20);
+        $fleets = Fleet::orderBy('order', 'asc')->paginate($perPage);
 
-        return $this->dataResponse('All Fleets', FleetResource::collection($fleets));
+        return $this->paginatedResponse('All Fleets', FleetResource::collection($fleets), $fleets);
     }
 
     /**
@@ -110,6 +114,8 @@ class FleetController extends Controller
             Fleet::where('id', $fleetData['id'])->update(['order' => $fleetData['order']]);
         }
 
+        cache()->forget('all_active_fleets');
+
         return $this->successResponse('Fleet order updated successfully');
     }
 
@@ -121,6 +127,8 @@ class FleetController extends Controller
         $fleet->update(['is_active' => ! $fleet->is_active]);
 
         $status = $fleet->is_active ? 'activated' : 'deactivated';
+
+        cache()->forget('all_active_fleets');
 
         return $this->dataResponse("Fleet {$status} successfully", FleetResource::make($fleet));
     }

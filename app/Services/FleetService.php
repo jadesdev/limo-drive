@@ -39,6 +39,8 @@ class FleetService
             $validated['order'] = Fleet::max('order') + 1;
         }
 
+        cache()->forget('all_active_fleets');
+
         return Fleet::create($validated);
     }
 
@@ -85,6 +87,8 @@ class FleetService
 
         $fleet->update($validated);
 
+        cache()->forget('all_active_fleets');
+
         return $fleet->fresh();
     }
 
@@ -105,5 +109,7 @@ class FleetService
         }
 
         $fleet->delete();
+
+        cache()->forget('all_active_fleets');
     }
 }

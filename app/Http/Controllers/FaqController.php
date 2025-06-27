@@ -16,9 +16,11 @@ class FaqController extends Controller
      *
      * @unauthenticated
      */
-    public function index()
+    public function index(Request $request)
     {
-        $faqs = Faq::active()->orderBy('order', 'asc')->get();
+        $faqs = cache()->remember('faqList', now()->addHours(1), function () {
+            return Faq::active()->orderBy('order', 'asc')->get();
+        });
 
         // success response
         return $this->dataResponse('Faqs Fetched successfully', FaqResource::collection($faqs));
@@ -30,6 +32,7 @@ class FaqController extends Controller
     public function adminIndex(Request $request)
     {
         $query = Faq::query();
+        $perPage = $request->input('per_page', 20);
 
         // Filter by status if provided
         if ($request->has('status')) {
@@ -45,9 +48,9 @@ class FaqController extends Controller
             });
         }
 
-        $faqs = $query->orderBy('order', 'asc')->get();
+        $faqs = $query->orderBy('order', 'asc')->paginate($perPage);
 
-        return $this->dataResponse('All FAQs', FaqResource::collection($faqs));
+        return $this->paginatedResponse('All FAQs', FaqResource::collection($faqs), $faqs);
     }
 
     /**
@@ -77,6 +80,8 @@ class FaqController extends Controller
 
         $faq = Faq::create($validated);
 
+        cache()->forget('faqList');
+
         return $this->dataResponse('FAQ created successfully', FaqResource::make($faq), 201);
     }
 
@@ -92,7 +97,9 @@ class FaqController extends Controller
             'order' => 'nullable|integer|min:1',
         ]);
 
-        $faq->update($validated);
+        $faq->update($validated);   
+
+        cache()->forget('faqList');
 
         return $this->dataResponse('FAQ updated successfully', FaqResource::make($faq->fresh()));
     }
@@ -104,6 +111,8 @@ class FaqController extends Controller
     {
         $faq->delete();
 
+        cache()->forget('faqList');
+
         return $this->successResponse('FAQ deleted successfully');
     }
 
@@ -113,6 +122,8 @@ class FaqController extends Controller
     public function toggleStatus(Faq $faq)
     {
         $faq->update(['is_active' => ! $faq->is_active]);
+
+        cache()->forget('faqList');
 
         $status = $faq->is_active ? 'activated' : 'deactivated';
 
