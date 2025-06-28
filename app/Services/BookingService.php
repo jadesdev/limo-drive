@@ -11,6 +11,7 @@ use App\Models\Payment;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Log;
 use Str;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
@@ -349,6 +350,7 @@ class BookingService
                 ],
             ];
         } catch (\Exception $e) {
+            Log::error('Failed to confirm payment: ' . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'Failed to confirm payment: ' . $e->getMessage(),

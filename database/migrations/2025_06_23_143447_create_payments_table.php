@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('customer_name')->nullable();
             $table->string('customer_email')->nullable();
             $table->string('gateway_name')->default('stripe');
-            $table->string('gateway_ref')->unique();
+            $table->string('gateway_ref')->nullable()->index();
             $table->string('payment_method')->nullable();
             $table->string('status')->default('pending');
             $table->json('gateway_payload')->nullable();
