@@ -109,7 +109,7 @@ class BookingService
         });
 
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -170,7 +170,7 @@ class BookingService
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 

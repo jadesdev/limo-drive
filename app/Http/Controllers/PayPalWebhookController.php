@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\BookingPaymentService;
-use App\Services\BookingService;
-use App\Traits\ApiResponse;
 use App\Services\PayPalService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 class PayPalWebhookController extends Controller
 {
     use ApiResponse;
+
     public function __construct(private PayPalService $paypalService) {}
 
     public function handleWebhook(Request $request)
@@ -30,7 +30,7 @@ class PayPalWebhookController extends Controller
             ];
 
             // Verify webhook signature
-            if (!$this->paypalService->verifyWebhookSignature($requestBody, $headers)) {
+            if (! $this->paypalService->verifyWebhookSignature($requestBody, $headers)) {
                 Log::warning('PayPal webhook signature verification failed', [
                     'headers' => $headers,
                     'body' => $requestBody,
@@ -42,8 +42,9 @@ class PayPalWebhookController extends Controller
             // Parse webhook data
             $webhookData = json_decode($requestBody, true);
 
-            if (!$webhookData) {
+            if (! $webhookData) {
                 Log::error('PayPal webhook: Invalid JSON payload');
+
                 return response('Invalid JSON payload', 400);
             }
 
@@ -90,8 +91,9 @@ class PayPalWebhookController extends Controller
         $orderId = $webhookData['resource']['id'] ?? null;
         $bookingId = $webhookData['resource']['purchase_units'][0]['custom_id'] ?? null;
 
-        if (!$orderId || !$bookingId) {
+        if (! $orderId || ! $bookingId) {
             Log::error('PayPal webhook: Missing order ID or booking ID in CHECKOUT.ORDER.APPROVED');
+
             return;
         }
 
@@ -123,10 +125,11 @@ class PayPalWebhookController extends Controller
         $captureId = $resource['id'] ?? null;
         $amount = $resource['amount'] ?? [];
 
-        if (!$orderId || !$captureId) {
+        if (! $orderId || ! $captureId) {
             Log::error('PayPal webhook: Missing required data in PAYMENT.CAPTURE.COMPLETED', [
                 'resource' => $resource,
             ]);
+
             return;
         }
 

@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Log;
 class PayPalService
 {
     private string $clientId;
+
     private string $secret;
+
     private string $baseUrl;
 
     // Cache key for storing access token
@@ -47,7 +49,7 @@ class PayPalService
                     'grant_type' => 'client_credentials',
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new Exception("PayPal OAuth failed with status {$response->status()}: {$response->body()}");
             }
 
@@ -115,7 +117,7 @@ class PayPalService
                 ->timeout(30)
                 ->post("{$this->baseUrl}/v2/checkout/orders", $payload);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new Exception("PayPal create order failed with status {$response->status()}: {$response->body()}");
             }
             Log::info('PayPal createPayment response', [
@@ -152,7 +154,7 @@ class PayPalService
                 ->timeout(30)
                 ->post("{$this->baseUrl}/v2/checkout/orders/{$orderId}/capture");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new Exception("status {$response->status()}: {$response->body()}");
             }
 
@@ -181,7 +183,7 @@ class PayPalService
                 ->timeout(30)
                 ->get("{$this->baseUrl}/v2/checkout/orders/{$orderId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new Exception("PayPal get order failed with status {$response->status()}: {$response->body()}");
             }
 
@@ -199,8 +201,9 @@ class PayPalService
     /**
      * Verify webhook signature (for webhook handling)
      *
-     * @param string $requestBody Raw request body
-     * @param array $headers Request headers
+     * @param  string  $requestBody  Raw request body
+     * @param  array  $headers  Request headers
+     *
      * @throws Exception
      */
     public function verifyWebhookSignature(string $requestBody, array $headers): bool
@@ -209,7 +212,7 @@ class PayPalService
             $accessToken = $this->getAccessToken();
 
             $webhookId = config('services.paypal.webhook_id');
-            if (!$webhookId) {
+            if (! $webhookId) {
                 throw new Exception('PayPal webhook ID not configured');
             }
 
@@ -228,6 +231,7 @@ class PayPalService
 
             if ($response->successful()) {
                 $result = $response->json();
+
                 return ($result['verification_status'] ?? '') === 'SUCCESS';
             }
 

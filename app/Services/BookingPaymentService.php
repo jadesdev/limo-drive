@@ -18,7 +18,7 @@ class BookingPaymentService
     {
         if ($booking->payment_method === 'paypal') {
             return $this->createPayPalOrder($booking);
-        } else if ($booking->payment_method === 'stripe') {
+        } elseif ($booking->payment_method === 'stripe') {
             return $this->createStripePaymentIntent($booking);
         }
         throw new Exception('Invalid payment method: ' . $booking->payment_method);
@@ -84,15 +84,17 @@ class BookingPaymentService
             $booking = Booking::findOrFail($bookingId);
             if ($booking->payment_method === 'stripe') {
                 return $this->confirmStripePayment($booking, $paymentIntentId);
-            } else if ($booking->payment_method === 'paypal') {
+            } elseif ($booking->payment_method === 'paypal') {
                 return $this->confirmPaypalPayment($booking, $paymentIntentId);
             }
+
             return [
                 'success' => false,
                 'message' => 'Invalid Booking payment',
             ];
         } catch (\Exception $e) {
             Log::error('Failed to confirm payment: ' . $e->getMessage());
+
             return [
                 'success' => false,
                 'message' => 'Failed to confirm payment: ' . $e->getMessage(),
