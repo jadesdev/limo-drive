@@ -25,6 +25,10 @@ class PayPalService
         $this->baseUrl = config('services.paypal.mode') === 'sandbox'
             ? 'https://api-m.sandbox.paypal.com'
             : 'https://api.paypal.com';
+
+        if (empty($this->clientId) || empty($this->secret)) {
+            throw new \InvalidArgumentException('PayPal client ID and secret must be set in the configuration.');
+        }
     }
 
     /**
@@ -92,7 +96,7 @@ class PayPalService
                             'currency_code' => $currency,
                             'value' => $formattedAmount,
                         ],
-                        'description' => $details['description'] ?? 'Payment',
+                        'description' => $details['description'] ?? 'Booking Payment',
                         'custom_id' => $details['reference'] ?? null,
                         'invoice_id' => $details['booking_code'] ?? null,
                     ],

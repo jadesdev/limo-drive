@@ -89,7 +89,21 @@ class PayPalWebhookController extends Controller
     private function handleOrderApproved(array $webhookData)
     {
         $orderId = $webhookData['resource']['id'] ?? null;
-        $bookingId = $webhookData['resource']['purchase_units'][0]['custom_id'] ?? null;
+        $bookingId = null;
+        if (
+            isset($webhookData['resource']['purchase_units']) &&
+            is_array($webhookData['resource']['purchase_units']) &&
+            count($webhookData['resource']['purchase_units']) > 0 &&
+            isset($webhookData['resource']['purchase_units'][0]['custom_id'])
+        ) {
+            $bookingId = $webhookData['resource']['purchase_units'][0]['custom_id'];
+        }
+
+        if (! $orderId || ! $bookingId) {
+            Log::error('PayPal webhook: Missing order ID or booking ID in CHECKOUT.ORDER.APPROVED');
+
+            return;
+        }
 
         if (! $orderId || ! $bookingId) {
             Log::error('PayPal webhook: Missing order ID or booking ID in CHECKOUT.ORDER.APPROVED');

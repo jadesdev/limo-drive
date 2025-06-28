@@ -134,7 +134,7 @@ class BookingPaymentService
             Payment::create([
                 'booking_id' => $booking->id,
                 'payment_intent_id' => $paymentIntent['id'],
-                'amount' => $paymentIntent['purchase_units'][0]['amount']['value'],
+                'amount' => (float) $paymentIntent['purchase_units'][0]['amount']['value'],
                 'currency' => $paymentIntent['purchase_units'][0]['amount']['currency_code'],
                 'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
                 'customer_email' => $booking->customer?->email,
@@ -302,8 +302,8 @@ class BookingPaymentService
                 ['payment_intent_id' => $paymentResponse['resource']['id']],
                 [
                     'booking_id' => $booking->id,
-                    'amount' => $paymentResponse['resource']['amount'] / 100,
-                    'currency' => $paymentResponse['resource']['currency'],
+                    'amount' => (float) $paymentResponse['resource']['amount'],
+                    'currency' => $paymentResponse['resource']['currency_code'],
                     'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
                     'customer_email' => $booking->customer?->email,
                     'status' => 'completed',
