@@ -18,7 +18,7 @@ class BookingController extends Controller
     public function __construct(protected BookingService $bookingService, protected BookingPaymentService $bookingPaymentService) {}
 
     /**
-     * Get a price quote booking.
+     * Step 1: Get price and vehicles.
      *
      * @unauthenticated
      */
@@ -30,7 +30,9 @@ class BookingController extends Controller
     }
 
     /**
-     * Store a new booking.
+     * Step 2: Submit booking Details and create payment intent.
+     *
+     * payment intent is created for stripe and paypal and they are use ed to charge customers.
      *
      * @unauthenticated
      */
@@ -74,7 +76,7 @@ class BookingController extends Controller
     /**
      * Confirm payment completion
      *
-     * This handles cases where webhook fails or needs manual confirmation
+     * This handles cases where webhook fails or needs manual confirmation.
      *
      * @unauthenticated
      */
