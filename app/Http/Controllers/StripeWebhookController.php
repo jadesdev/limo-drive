@@ -39,6 +39,7 @@ class StripeWebhookController extends Controller
             // Invalid payload or signature
             Log::error('Stripe webhook invalid payload', ['error' => $e->getMessage()]);
 
+            // TODO: remove in production
             // return response('Invalid request', 400);
         }
         // TODO: remove in production

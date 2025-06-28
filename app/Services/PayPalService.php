@@ -12,7 +12,7 @@ class PayPalService
     private string $clientId;
     private string $secret;
     private string $baseUrl;
-    
+
     // Cache key for storing access token
     private const ACCESS_TOKEN_CACHE_KEY = 'paypal_access_token';
 
@@ -34,7 +34,7 @@ class PayPalService
     {
         // Try to get cached token first
         $cachedToken = Cache::get(self::ACCESS_TOKEN_CACHE_KEY);
-        
+
         if ($cachedToken) {
             return $cachedToken;
         }
@@ -54,13 +54,12 @@ class PayPalService
             $data = $response->json();
             $accessToken = $data['access_token'];
             $expiresIn = $data['expires_in'] ?? 32400;
-            
-            $cacheTime = max(60, $expiresIn - 300); 
-            
+
+            $cacheTime = max(60, $expiresIn - 300);
+
             Cache::put(self::ACCESS_TOKEN_CACHE_KEY, $accessToken, $cacheTime);
 
             return $accessToken;
-
         } catch (Exception $e) {
             Log::error('PayPal getAccessToken failed', [
                 'error' => $e->getMessage(),
@@ -119,9 +118,14 @@ class PayPalService
             if (!$response->successful()) {
                 throw new Exception("PayPal create order failed with status {$response->status()}: {$response->body()}");
             }
+            Log::info('PayPal createPayment response', [
+                'amount' => $amount,
+                'currency' => $currency,
+                'details' => $details,
+                'response' => $response->json(),
+            ]);
 
             return $response->json();
-
         } catch (Exception $e) {
             Log::error('PayPal createPayment failed', [
                 'error' => $e->getMessage(),
@@ -149,18 +153,17 @@ class PayPalService
                 ->post("{$this->baseUrl}/v2/checkout/orders/{$orderId}/capture");
 
             if (!$response->successful()) {
-                throw new Exception("PayPal capture failed with status {$response->status()}: {$response->body()}");
+                throw new Exception("status {$response->status()}: {$response->body()}");
             }
 
             return $response->json();
-
         } catch (Exception $e) {
             Log::error('PayPal captureOrder failed', [
                 'error' => $e->getMessage(),
                 'orderId' => $orderId,
             ]);
 
-            throw new Exception('Failed to capture PayPal order: ' . $e->getMessage());
+            throw new Exception('Failed PayPal order: ' . $e->getMessage());
         }
     }
 
@@ -183,7 +186,6 @@ class PayPalService
             }
 
             return $response->json();
-
         } catch (Exception $e) {
             Log::error('PayPal getOrderDetails failed', [
                 'error' => $e->getMessage(),
@@ -205,7 +207,7 @@ class PayPalService
     {
         try {
             $accessToken = $this->getAccessToken();
-            
+
             $webhookId = config('services.paypal.webhook_id');
             if (!$webhookId) {
                 throw new Exception('PayPal webhook ID not configured');
@@ -235,7 +237,6 @@ class PayPalService
             ]);
 
             return false;
-
         } catch (Exception $e) {
             Log::error('PayPal webhook verification error', [
                 'error' => $e->getMessage(),

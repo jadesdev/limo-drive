@@ -328,7 +328,7 @@ class BookingService
      * Confirm payment and update booking status
      * This is used as a fallback when webhook fails
      */
-    public function confirmPayment(string $bookingId, string $paymentIntentId): array
+    public function confirmPayment(string $bookingId, string $paymentIntentId)
     {
         try {
             // Get the booking
@@ -357,13 +357,13 @@ class BookingService
     public function confirmPaypalPayment($booking, $paymentIntentId)
     {
         $paypalService = app(PayPalService::class);
-        $paymentIntent = $paypalService->captureOrder($paymentIntentId);
+        $paymentIntent = $paypalService->getOrderDetails($paymentIntentId);
 
         // Check if payment was successful
-        if ($paymentIntent['status'] !== 'COMPLETED') {
+        if ($paymentIntent['status'] !== 'APPROVED') {
             return [
                 'success' => false,
-                'message' => 'Payment has not been completed yet.',
+                'message' => 'Payment has not been approved yet.',
             ];
         }
 
@@ -533,12 +533,14 @@ class BookingService
             \Log::info('Booking payment confirmed via webhook', [
                 'booking_id' => $booking->id,
                 'booking_code' => $booking->code,
+                'gateway' => 'stripe',
                 'payment_intent_id' => $paymentIntent->id,
             ]);
 
             return true;
         } catch (\Exception $e) {
             \Log::error('Webhook payment processing failed', [
+                'gateway' => 'stripe',
                 'payment_intent_id' => $paymentIntent->id,
                 'error' => $e->getMessage(),
             ]);
@@ -546,6 +548,66 @@ class BookingService
             return false;
         }
     }
+
+    /**
+     * Confirm a PayPal payment webhook
+     * 
+     */
+    function processPaypalWebhook($bookingId, $paymentResponse)
+    {
+        try {
+            $booking = Booking::find($bookingId);
+            if (! $booking) {
+                \Log::warning('Booking not found for webhook', [
+                    'booking_id' => $bookingId,
+                    'gateway' => 'paypal',
+                    'payment_intent_id' => $paymentResponse['resource']['id'] ?? null,
+                ]);
+
+                return false;
+            }
+            // Update booking status
+            $booking->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+            ]);
+
+            // Create payment record
+            Payment::updateOrCreate(
+                ['payment_intent_id' => $paymentResponse['resource']['id']],
+                [
+                    'booking_id' => $booking->id,
+                    'amount' => $paymentResponse['resource']['amount'] / 100,
+                    'currency' => $paymentResponse['resource']['currency'],
+                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
+                    'customer_email' => $booking->customer?->email,
+                    'status' => 'completed',
+                    'payment_method' => 'paypal',
+                    'gateway_name' => 'paypal',
+                    'gateway_ref' => $paymentResponse['resource']['purchase_units'][0]['reference_id'],
+                    'gateway_payload' => $paymentResponse,
+                ]
+            );
+
+            \Log::info('Booking payment confirmed via webhook', [
+                'booking_id' => $booking->id,
+                'gateway' => 'paypal',
+                'booking_code' => $booking->code,
+                'payment_intent_id' => $paymentResponse['resource']['id'],
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('paypal webhook payment processing failed', [
+                'booking_id' => $bookingId,
+                'gateway' => 'paypal',
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
 
     /**
      * Helper to get simulated trip info based on service type.
