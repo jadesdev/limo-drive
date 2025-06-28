@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Payment;
-use App\Services\BookingService;
+use App\Services\BookingPaymentService;
 use App\Traits\ApiResponse;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class StripeWebhookController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private BookingService $bookingService) {}
+    public function __construct(private BookingPaymentService $bookingPaymentService) {}
 
     /**
      * Handle a Stripe webhook call.
@@ -39,6 +39,7 @@ class StripeWebhookController extends Controller
             // Invalid payload or signature
             Log::error('Stripe webhook invalid payload', ['error' => $e->getMessage()]);
 
+            // TODO: remove in production
             // return response('Invalid request', 400);
         }
         // TODO: remove in production
@@ -79,7 +80,7 @@ class StripeWebhookController extends Controller
             'booking_id' => $paymentIntent->metadata->booking_id ?? null,
         ]);
 
-        $success = $this->bookingService->processWebhookPayment($paymentIntent);
+        $success = $this->bookingPaymentService->processStripeWebhook($paymentIntent);
 
         if ($success) {
             \Log::info('Booking confirmed via webhook', [

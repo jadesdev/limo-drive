@@ -7,14 +7,9 @@ use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Fleet;
-use App\Models\Payment;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Log;
 use Str;
-use Stripe\PaymentIntent;
-use Stripe\Stripe;
 
 class BookingService
 {
@@ -114,7 +109,7 @@ class BookingService
         });
 
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -175,7 +170,7 @@ class BookingService
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -246,7 +241,7 @@ class BookingService
             // Optional fields
             'is_accessible' => $data['accessible'] ?? false,
             'is_return_service' => $data['return_service'] ?? false,
-            'payment_method' => 'stripe',
+            'payment_method' => $data['payment_method'],
             'notes' => $data['notes'] ?? null,
         ];
 
@@ -261,104 +256,6 @@ class BookingService
     }
 
     /**
-     * Create a Stripe Payment Intent for a booking.
-     */
-    public function createPaymentIntent(Booking $booking)
-    {
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-        $paymentIntent = PaymentIntent::create([
-            'amount' => $booking->price * 100,
-            'currency' => 'usd',
-            'automatic_payment_methods' => [
-                'enabled' => true,
-            ],
-            'metadata' => [
-                'booking_id' => $booking->id,
-                'booking_code' => $booking->code,
-            ],
-        ]);
-
-        return [
-            'intent' => $paymentIntent->id,
-            'client_secret' => $paymentIntent->client_secret,
-            'amount' => $paymentIntent->amount / 100,
-            'currency' => $paymentIntent->currency,
-        ];
-    }
-
-    /**
-     * Confirm payment and update booking status
-     * This is used as a fallback when webhook fails
-     */
-    public function confirmPayment(string $bookingId, string $paymentIntentId): array
-    {
-        try {
-            // Get the booking
-            $booking = Booking::findOrFail($bookingId);
-            Stripe::setApiKey(config('services.stripe.secret'));
-
-            // Verify payment intent with Stripe
-            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
-
-            // Check if payment was successful
-            if ($paymentIntent->status !== 'succeeded') {
-                return [
-                    'success' => false,
-                    'message' => 'Payment has not been completed yet.',
-                ];
-            }
-
-            // Verify this payment intent belongs to this booking
-            if ($paymentIntent->metadata->booking_id !== $booking->id) {
-                return [
-                    'success' => false,
-                    'message' => 'Payment does not match this booking.',
-                ];
-            }
-
-            // Update booking if not already confirmed
-            if ($booking->status === 'pending_payment') {
-                $booking->update([
-                    'status' => 'confirmed',
-                    'payment_status' => 'paid',
-                ]);
-
-                // Create payment record
-                Payment::create([
-                    'booking_id' => $booking->id,
-                    'payment_intent_id' => $paymentIntent->id,
-                    'amount' => $paymentIntent->amount / 100,
-                    'currency' => $paymentIntent->currency,
-                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
-                    'customer_email' => $booking->customer?->email,
-                    'status' => 'completed',
-                    'payment_method' => 'stripe',
-                    'gateway_name' => 'stripe',
-                    'gateway_ref' => $paymentIntent->payment_method,
-                    'gateway_payload' => $paymentIntent,
-                ]);
-            }
-
-            return [
-                'success' => true,
-                'booking' => [
-                    'id' => $booking->id,
-                    'code' => $booking->code,
-                    'status' => $booking->status,
-                    'payment_status' => $booking->payment_status,
-                ],
-            ];
-        } catch (\Exception $e) {
-            Log::error('Failed to confirm payment: ' . $e->getMessage());
-            return [
-                'success' => false,
-                'message' => 'Failed to confirm payment: ' . $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
      * Get booking details by ID or Code
      */
     public function getBookingDetails($id)
@@ -370,73 +267,6 @@ class BookingService
         }
 
         return $booking;
-    }
-
-    /**
-     * Process webhook payment confirmation
-     * This is called from the webhook handler
-     */
-    public function processWebhookPayment($paymentIntent): bool
-    {
-        try {
-            $bookingId = $paymentIntent->metadata->booking_id ?? null;
-
-            if (! $bookingId) {
-                \Log::warning('Webhook payment intent missing booking_id', [
-                    'payment_intent_id' => $paymentIntent->id,
-                ]);
-
-                return false;
-            }
-
-            $booking = Booking::find($bookingId);
-            if (! $booking) {
-                \Log::warning('Booking not found for webhook', [
-                    'booking_id' => $bookingId,
-                    'payment_intent_id' => $paymentIntent->id,
-                ]);
-
-                return false;
-            }
-
-            // Update booking status
-            $booking->update([
-                'status' => 'confirmed',
-                'payment_status' => 'paid',
-            ]);
-
-            // Create payment record
-            Payment::updateOrCreate(
-                ['payment_intent_id' => $paymentIntent->id],
-                [
-                    'booking_id' => $booking->id,
-                    'amount' => $paymentIntent->amount / 100,
-                    'currency' => $paymentIntent->currency,
-                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
-                    'customer_email' => $booking->customer?->email,
-                    'status' => 'completed',
-                    'payment_method' => 'stripe',
-                    'gateway_name' => 'stripe',
-                    'gateway_ref' => $paymentIntent->payment_method,
-                    'gateway_payload' => $paymentIntent,
-                ]
-            );
-
-            \Log::info('Booking payment confirmed via webhook', [
-                'booking_id' => $booking->id,
-                'booking_code' => $booking->code,
-                'payment_intent_id' => $paymentIntent->id,
-            ]);
-
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Webhook payment processing failed', [
-                'payment_intent_id' => $paymentIntent->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
     }
 
     /**

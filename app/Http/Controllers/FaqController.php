@@ -97,7 +97,7 @@ class FaqController extends Controller
             'order' => 'nullable|integer|min:1',
         ]);
 
-        $faq->update($validated);   
+        $faq->update($validated);
 
         cache()->forget('faqList');
 

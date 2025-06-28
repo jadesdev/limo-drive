@@ -9,6 +9,7 @@ use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StripeWebhookController;
@@ -125,3 +126,6 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 
 // Stripe Webhook
 Route::post('/stripe-webhook', [StripeWebhookController::class, 'handle']);
+
+// PayPal Webhook
+Route::post('/paypal-webhook', [PayPalWebhookController::class, 'handleWebhook']);
