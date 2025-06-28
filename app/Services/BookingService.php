@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Fleet;
 use App\Models\Payment;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -246,7 +247,7 @@ class BookingService
             // Optional fields
             'is_accessible' => $data['accessible'] ?? false,
             'is_return_service' => $data['return_service'] ?? false,
-            'payment_method' => 'stripe',
+            'payment_method' => $data['payment_method'],
             'notes' => $data['notes'] ?? null,
         ];
 
@@ -265,6 +266,41 @@ class BookingService
      */
     public function createPaymentIntent(Booking $booking)
     {
+        if ($booking->payment_method === 'paypal') {
+            return $this->createPayPalOrder($booking);
+        } else if ($booking->payment_method === 'stripe') {
+            return $this->createStripePaymentIntent($booking);
+        }
+        throw new Exception('Invalid payment method: ' . $booking->payment_method);
+    }
+
+    /**
+     * Create a PayPal Payment Intent for a booking.
+     */
+    public function createPayPalOrder(Booking $booking)
+    {
+        $paypalService = app(PayPalService::class);
+        $paymentIntent = $paypalService->createPayment($booking->price, 'USD', [
+            'booking_id' => $booking->id,
+            'reference' => $booking->id,
+            'description' => 'Booking Payment on ' . config('app.name'),
+            'booking_code' => $booking->code,
+        ]);
+
+        return [
+            'intent' => $paymentIntent['id'],
+            'method' => 'paypal',
+            'client_secret' => $paymentIntent['id'],
+            'amount' => $booking->price,
+            'currency' => 'USD',
+        ];
+    }
+
+    /**
+     * Create a Stripe Payment Intent for a booking.
+     */
+    public function createStripePaymentIntent(Booking $booking)
+    {
         Stripe::setApiKey(config('services.stripe.secret'));
 
         $paymentIntent = PaymentIntent::create([
@@ -281,6 +317,7 @@ class BookingService
 
         return [
             'intent' => $paymentIntent->id,
+            'method' => 'stripe',
             'client_secret' => $paymentIntent->client_secret,
             'amount' => $paymentIntent->amount / 100,
             'currency' => $paymentIntent->currency,
@@ -296,58 +333,14 @@ class BookingService
         try {
             // Get the booking
             $booking = Booking::findOrFail($bookingId);
-            Stripe::setApiKey(config('services.stripe.secret'));
-
-            // Verify payment intent with Stripe
-            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
-
-            // Check if payment was successful
-            if ($paymentIntent->status !== 'succeeded') {
-                return [
-                    'success' => false,
-                    'message' => 'Payment has not been completed yet.',
-                ];
+            if ($booking->payment_method === 'stripe') {
+                return $this->confirmStripePayment($booking, $paymentIntentId);
+            } else if ($booking->payment_method === 'paypal') {
+                return $this->confirmPaypalPayment($booking, $paymentIntentId);
             }
-
-            // Verify this payment intent belongs to this booking
-            if ($paymentIntent->metadata->booking_id !== $booking->id) {
-                return [
-                    'success' => false,
-                    'message' => 'Payment does not match this booking.',
-                ];
-            }
-
-            // Update booking if not already confirmed
-            if ($booking->status === 'pending_payment') {
-                $booking->update([
-                    'status' => 'confirmed',
-                    'payment_status' => 'paid',
-                ]);
-
-                // Create payment record
-                Payment::create([
-                    'booking_id' => $booking->id,
-                    'payment_intent_id' => $paymentIntent->id,
-                    'amount' => $paymentIntent->amount / 100,
-                    'currency' => $paymentIntent->currency,
-                    'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
-                    'customer_email' => $booking->customer?->email,
-                    'status' => 'completed',
-                    'payment_method' => 'stripe',
-                    'gateway_name' => 'stripe',
-                    'gateway_ref' => $paymentIntent->payment_method,
-                    'gateway_payload' => $paymentIntent,
-                ]);
-            }
-
             return [
-                'success' => true,
-                'booking' => [
-                    'id' => $booking->id,
-                    'code' => $booking->code,
-                    'status' => $booking->status,
-                    'payment_status' => $booking->payment_status,
-                ],
+                'success' => false,
+                'message' => 'Invalid Booking payment',
             ];
         } catch (\Exception $e) {
             Log::error('Failed to confirm payment: ' . $e->getMessage());
@@ -356,6 +349,121 @@ class BookingService
                 'message' => 'Failed to confirm payment: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Confirm a PayPal payment
+     */
+    public function confirmPaypalPayment($booking, $paymentIntentId)
+    {
+        $paypalService = app(PayPalService::class);
+        $paymentIntent = $paypalService->captureOrder($paymentIntentId);
+
+        // Check if payment was successful
+        if ($paymentIntent['status'] !== 'COMPLETED') {
+            return [
+                'success' => false,
+                'message' => 'Payment has not been completed yet.',
+            ];
+        }
+
+        // Verify this payment intent belongs to this booking
+        $code = $paymentIntent['purchase_units'][0]['custom_id'] ?? null;
+        if ($code !== $booking->id) {
+            return [
+                'success' => false,
+                'message' => 'Payment does not match this booking.',
+            ];
+        }
+
+        // Update booking if not already confirmed
+        if ($booking->status === 'pending_payment') {
+            $booking->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+            ]);
+
+            // Create payment record
+            Payment::create([
+                'booking_id' => $booking->id,
+                'payment_intent_id' => $paymentIntent['id'],
+                'amount' => $paymentIntent['purchase_units'][0]['amount']['value'],
+                'currency' => $paymentIntent['purchase_units'][0]['amount']['currency_code'],
+                'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
+                'customer_email' => $booking->customer?->email,
+                'status' => 'completed',
+                'payment_method' => 'paypal',
+                'gateway_name' => 'paypal',
+                'gateway_ref' => $paymentIntent['purchase_units'][0]['reference_id'],
+                'gateway_payload' => $paymentIntent,
+            ]);
+        }
+
+        return [
+            'success' => true,
+            'booking' => [
+                'id' => $booking->id,
+                'code' => $booking->code,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+            ],
+        ];
+    }
+    public function confirmStripePayment($booking, $paymentIntentId)
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        // Verify payment intent with Stripe
+        $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
+
+        // Check if payment was successful
+        if ($paymentIntent->status !== 'succeeded') {
+            return [
+                'success' => false,
+                'message' => 'Payment has not been completed yet.',
+            ];
+        }
+
+        // Verify this payment intent belongs to this booking
+        if ($paymentIntent->metadata->booking_id !== $booking->id) {
+            return [
+                'success' => false,
+                'message' => 'Payment does not match this booking.',
+            ];
+        }
+
+        // Update booking if not already confirmed
+        if ($booking->status === 'pending_payment') {
+            $booking->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+            ]);
+
+            // Create payment record
+            Payment::create([
+                'booking_id' => $booking->id,
+                'payment_intent_id' => $paymentIntent->id,
+                'amount' => $paymentIntent->amount / 100,
+                'currency' => $paymentIntent->currency,
+                'customer_name' => $booking->customer?->first_name . ' ' . $booking->customer?->last_name,
+                'customer_email' => $booking->customer?->email,
+                'status' => 'completed',
+                'payment_method' => 'stripe',
+                'gateway_name' => 'stripe',
+                'gateway_ref' => $paymentIntent->payment_method,
+                'gateway_payload' => $paymentIntent,
+            ]);
+        }
+
+        return [
+            'success' => true,
+            'booking' => [
+                'id' => $booking->id,
+                'code' => $booking->code,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+            ],
+        ];
     }
 
     /**
