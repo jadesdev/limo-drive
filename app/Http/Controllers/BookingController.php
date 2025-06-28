@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateBookingRequest;
 use App\Http\Requests\GetQuoteRequest;
 use App\Models\Booking;
+use App\Services\BookingPaymentService;
 use App\Services\BookingService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,7 @@ class BookingController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(protected BookingService $bookingService) {}
+    public function __construct(protected BookingService $bookingService, protected BookingPaymentService $bookingPaymentService) {}
 
     /**
      * Get a price quote booking.
@@ -36,7 +37,7 @@ class BookingController extends Controller
     public function store(CreateBookingRequest $request)
     {
         $booking = $this->bookingService->createBooking($request->validated());
-        $paymentIntent = $this->bookingService->createPaymentIntent($booking);
+        $paymentIntent = $this->bookingPaymentService->createPaymentIntent($booking);
 
         return $this->dataResponse(
             'Booking created successfully. Please proceed to payment.',
@@ -65,7 +66,7 @@ class BookingController extends Controller
             return $this->errorResponse('This booking has already been paid for.', 409);
         }
 
-        $paymentIntent = $this->bookingService->createPaymentIntent($booking);
+        $paymentIntent = $this->bookingPaymentService->createPaymentIntent($booking);
 
         return $this->dataResponse('Payment intent created successfully.', $paymentIntent);
     }
@@ -85,7 +86,7 @@ class BookingController extends Controller
         ]);
 
         try {
-            $result = $this->bookingService->confirmPayment(
+            $result = $this->bookingPaymentService->confirmPayment(
                 $validated['booking_id'],
                 $validated['payment_intent_id']
             );

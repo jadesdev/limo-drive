@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BookingPaymentService;
 use App\Services\BookingService;
 use App\Traits\ApiResponse;
 use App\Services\PayPalService;
@@ -95,7 +96,7 @@ class PayPalWebhookController extends Controller
         }
 
         Log::info('PayPal order approved', ['order_id' => $orderId]);
-        $bookingService = app(BookingService::class);
+        $bookingService = app(BookingPaymentService::class);
         $success = $bookingService->processPaypalWebhook($bookingId, $webhookData);
 
         if ($success) {
