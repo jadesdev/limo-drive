@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DriverAssignedToBooking;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\Booking\BookingResource;
 use App\Models\Booking;
+use App\Models\Driver;
 use App\Services\BookingService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -127,7 +129,7 @@ class AdminBookingController extends Controller
 
         return $this->dataResponse(
             'Booking retrieved successfully.',
-            $booking
+            new BookingResource($booking->fresh()->load('driver'))
         );
     }
 
@@ -144,9 +146,14 @@ class AdminBookingController extends Controller
             'driver_id' => $validated['driver_id'],
         ]);
 
+        $driver = Driver::find($validated['driver_id']);
+        if ($driver) {
+            event(new DriverAssignedToBooking($booking->fresh(), $driver));
+        }
+
         return $this->dataResponse(
             'Driver assigned successfully.',
-            $booking
+            new BookingResource($booking->fresh()->load('driver'))
         );
     }
 
@@ -161,7 +168,7 @@ class AdminBookingController extends Controller
 
         return $this->dataResponse(
             'Booking updated successfully.',
-            $updatedBooking
+            new BookingResource($updatedBooking->fresh()->load('driver'))
         );
     }
 
@@ -177,7 +184,7 @@ class AdminBookingController extends Controller
 
         return $this->dataResponse(
             'Booking status updated successfully.',
-            $booking
+            new BookingResource($booking->fresh()->load('driver'))
         );
     }
 }

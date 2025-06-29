@@ -10,17 +10,14 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminNewBookingNotification extends Mailable implements ShouldQueue
+class DriverJobAssignedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public Booking $booking)
-    {
-        //
-    }
+    public function __construct(public Booking $booking,) {}
 
     /**
      * Get the message envelope.
@@ -28,7 +25,7 @@ class AdminNewBookingNotification extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Booking Received! (#' . $this->booking->code . ')',
+            subject: 'New Ride Assignment: #' . $this->booking->code,
         );
     }
 
@@ -38,7 +35,7 @@ class AdminNewBookingNotification extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.booking.admin',
+            view: 'emails.driver.job-assigned',
         );
     }
 
