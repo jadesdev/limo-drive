@@ -39,11 +39,13 @@ class FleetController extends Controller
      */
     public function show($slug)
     {
-        if (Str::isUuid($slug)) {
-            $fleet = Fleet::where('id', $slug)->firstOrFail();
-        } else {
-            $fleet = Fleet::where('slug', $slug)->firstOrFail();
-        }
+        $fleet = cache()->remember("fleet:slug:{$slug}", now()->addHour(), function () use ($slug) {
+            if (Str::isUuid($slug)) {
+                return Fleet::where('id', $slug)->firstOrFail();
+            } else {
+                return Fleet::where('slug', $slug)->firstOrFail();
+            }
+        });
 
         return $this->dataResponse('Fleet Details', FleetResource::make($fleet));
     }
@@ -86,6 +88,8 @@ class FleetController extends Controller
         $validated = $request->validated();
         $fleet = $this->fleetService->update($fleet, $validated, $request);
 
+        cache()->forget("fleet:slug:{$fleet->slug}");
+        cache()->forget("fleet:slug:{$fleet->id}");
         return $this->dataResponse('Fleet updated successfully', FleetResource::make($fleet));
     }
 

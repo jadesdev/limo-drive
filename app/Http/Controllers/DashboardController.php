@@ -6,6 +6,7 @@ use App\Services\DashboardService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -23,7 +24,10 @@ class DashboardController extends Controller
         ]);
 
         $period = $validated['period'] ?? 'this_week';
-        $summaryData = $this->dashboardService->getDashboardSummary($period);
+        $cacheKey = 'dashboard_summary:' . $period;
+        $summaryData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($period) {
+            return $this->dashboardService->getDashboardSummary($period);
+        });
 
         return $this->dataResponse('Dashboard summary retrieved successfully.', $summaryData);
     }
@@ -42,8 +46,10 @@ class DashboardController extends Controller
         $period = $validated['period'] ?? 'this_week';
         $startDate = $validated['start_date'] ?? null;
         $endDate = $validated['end_date'] ?? null;
-
-        $chartData = $this->dashboardService->getChartData($period, $startDate, $endDate);
+        $cacheKey = 'dashboard_chart:' . $period . ':' . ($startDate ?? 'null') . ':' . ($endDate ?? 'null');
+        $chartData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($period, $startDate, $endDate) {
+            return $this->dashboardService->getChartData($period, $startDate, $endDate);
+        });
 
         return $this->dataResponse('Chart data retrieved successfully', $chartData);
     }

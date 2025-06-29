@@ -37,6 +37,7 @@ class ServiceAction
             }
             $data = $this->prepareArrayData($data);
 
+            cache()->forget('services:active_list');
             return Service::create($data);
         });
     }
@@ -66,6 +67,8 @@ class ServiceAction
             $data = $this->prepareArrayData($data);
 
             $service->update($data);
+
+            cache()->forget('services:active_list');
 
             return $service->fresh();
         });

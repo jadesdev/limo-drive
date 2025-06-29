@@ -26,7 +26,9 @@ class ServiceController extends Controller
      */
     public function index(Request $request)
     {
-        $services = Service::active()->orderBy('order', 'asc')->get();
+        $services = cache()->remember('services:active_list', now()->addHours(1), function () {
+            return Service::active()->orderBy('order', 'asc')->get();
+        });
 
         return $this->dataResponse('All Services', ServiceResource::collection($services));
     }
@@ -96,7 +98,7 @@ class ServiceController extends Controller
 
         return $this->dataResponse('Service updated successfully', ServiceResource::make($service));
     }
-
+    
     /**
      * Delete service (Admin)
      */
@@ -105,6 +107,8 @@ class ServiceController extends Controller
         $this->deleteServiceImages($service);
 
         $service->delete();
+
+        cache()->forget('services:active_list');
 
         return $this->successResponse('Service deleted successfully');
     }
