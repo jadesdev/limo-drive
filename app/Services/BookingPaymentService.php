@@ -127,7 +127,7 @@ class BookingPaymentService
 
         if ($booking->status === 'pending_payment') {
             $booking->update([
-                'status' => 'confirmed',
+                'status' => 'in_progress',
                 'payment_status' => 'paid',
             ]);
 
@@ -181,7 +181,7 @@ class BookingPaymentService
 
         if ($booking->status === 'pending_payment') {
             $booking->update([
-                'status' => 'confirmed',
+                'status' => 'in_progress',
                 'payment_status' => 'paid',
             ]);
 
@@ -238,7 +238,7 @@ class BookingPaymentService
             }
 
             $booking->update([
-                'status' => 'confirmed',
+                'status' => 'in_progress',
                 'payment_status' => 'paid',
             ]);
 
@@ -294,7 +294,7 @@ class BookingPaymentService
                 return false;
             }
             $booking->update([
-                'status' => 'confirmed',
+                'status' => 'in_progress',
                 'payment_status' => 'paid',
             ]);
 

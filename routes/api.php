@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\FleetController;
@@ -63,6 +64,11 @@ Route::controller(BookingController::class)->prefix('bookings')->group(function 
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    // Dashboard
+    Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
+        Route::get('/summary', 'summary');
+        Route::get('/chart', 'chart');
+    });
     // Services
     Route::controller(ServiceController::class)->prefix('services')->group(function () {
         Route::get('/', 'adminIndex');
@@ -111,6 +117,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
         Route::get('/{booking}', 'adminShow');
         Route::put('/{booking}/assign-driver', 'assignDriver');
         Route::put('/{booking}', 'update');
+        Route::put('/{booking}/update-status', 'updateStatus');
     });
     // Payments
     Route::apiResource('payments', PaymentController::class);

@@ -22,7 +22,7 @@ class AdminBookingController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'status' => 'nullable|string|in:pending_payment,paid,cancelled',
+            'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
             'driver_id' => 'nullable|uuid|exists:drivers,id',
             'payment_status' => 'nullable|string|in:pending_payment,paid,cancelled',
         ]);
@@ -62,7 +62,7 @@ class AdminBookingController extends Controller
             'start_date' => 'required|date_format:Y-m-d',
             /** @example 2025-06-27 */
             'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
-            'status' => 'nullable|string|in:in_progress,confirmed,completed,rejected',
+            'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
         ]);
         $query = Booking::query()
             ->with(['customer:id,first_name,last_name'])
@@ -70,13 +70,13 @@ class AdminBookingController extends Controller
 
         if (! empty($validated['status'])) {
             $dbStatus = match ($validated['status']) {
-                'in_progress' => 'pending_payment',
-                'rejected' => 'cancelled',
+                'in_progress' => 'in_progress',
+                'cancelled' => 'cancelled',
                 default => $validated['status'],
             };
 
             if ($validated['status'] === 'in_progress') {
-                $query->whereIn('status', ['pending_payment', 'confirmed']);
+                $query->whereIn('status', ['pending_payment', 'confirmed', 'in_progress']);
             } else {
                 $query->where('status', $dbStatus);
             }
@@ -90,7 +90,7 @@ class AdminBookingController extends Controller
 
             $color = match ($booking->status) {
                 'pending_payment' => '#6c757d',
-                'confirmed' => '#28a745',
+                'in_progress' => '#28a745',
                 'completed' => '#0d6efd',
                 'cancelled' => '#dc3545',
                 default => '#ffc107',
@@ -162,6 +162,22 @@ class AdminBookingController extends Controller
         return $this->dataResponse(
             'Booking updated successfully.',
             $updatedBooking
+        );
+    }
+
+    public function updateStatus(Request $request, Booking $booking): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending_payment,paid,cancelled,in_progress,completed',
+        ]);
+
+        $booking->update([
+            'status' => $validated['status'],
+        ]);
+
+        return $this->dataResponse(
+            'Booking status updated successfully.',
+            $booking
         );
     }
 }
