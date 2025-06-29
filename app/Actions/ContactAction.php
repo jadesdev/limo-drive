@@ -2,9 +2,12 @@
 
 namespace App\Actions;
 
+use App\Mail\Contact\MessageMail;
+use App\Mail\Contact\ReplyMail;
 use App\Models\ContactMessage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Mail;
 use Stevebauman\Purify\Facades\Purify;
 
 class ContactAction
@@ -17,9 +20,10 @@ class ContactAction
         $validated = Purify::clean($data);
 
         $adminEmail = config('mail.from.address');
-        $this->sendEmail($adminEmail, 'New Enquiry Received', $validated['message']);
 
-        return ContactMessage::create($validated);
+        $contact = ContactMessage::create($validated);
+        Mail::to($adminEmail)->queue(new MessageMail($contact));
+        return $contact;
     }
 
     /**
@@ -86,13 +90,21 @@ class ContactAction
             'is_read' => true,
         ]);
 
-        $this->sendEmail($contact->email, 'Re: ' . $contact->subject, $replyData['message']);
+        // Prepare variables for the reply email view
+        $adminName = config('mail.from.name', 'The LuxeRide Team');
+        $adminTitle = 'Customer Service Team';
+        $responseMessage = $replyData['message'];
+        $bookingUrl = $replyData['booking_url'] ?? null;
+
+        Mail::to($contact->email)->queue(new ReplyMail([
+            'contact' => $contact,
+            'responseMessage' => $responseMessage,
+            'adminName' => $adminName,
+            'adminTitle' => $adminTitle,
+            'bookingUrl' => $bookingUrl,
+            'subject' => "Enquiry from " . config('app.name'),
+        ]));
 
         return true;
-    }
-
-    public function sendEmail($email, $subject, $message)
-    {
-        // Mail::to($email)->send(new ContactReplyMail($message));
     }
 }
