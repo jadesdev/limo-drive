@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
 use Exception;
@@ -146,6 +147,7 @@ class BookingPaymentService
             ]);
         }
 
+        event(new BookingConfirmed($booking->fresh()));
         return [
             'success' => true,
             'booking' => [
@@ -199,6 +201,7 @@ class BookingPaymentService
                 'gateway_payload' => $paymentIntent,
             ]);
         }
+        event(new BookingConfirmed($booking->fresh()));
 
         return [
             'success' => true,
@@ -257,6 +260,7 @@ class BookingPaymentService
                     'gateway_payload' => $paymentIntent,
                 ]
             );
+            event(new BookingConfirmed($booking->fresh()));
 
             \Log::info('Booking payment confirmed via webhook', [
                 'booking_id' => $booking->id,
@@ -313,7 +317,7 @@ class BookingPaymentService
                     'gateway_payload' => $paymentResponse,
                 ]
             );
-
+            event(new BookingConfirmed($booking->fresh()));
             \Log::info('Booking payment confirmed via webhook', [
                 'booking_id' => $booking->id,
                 'gateway' => 'paypal',
