@@ -3,7 +3,6 @@
 namespace App\Mail\Contact;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -18,7 +17,6 @@ class ReplyMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(public array $data) {}
-
 
     /**
      * Get the message envelope.
@@ -47,11 +45,10 @@ class ReplyMail extends Mailable
                 'responseMessage' => $this->data['responseMessage'] ?? null,
                 'adminName' => $this->data['adminName'] ?? null,
                 'adminTitle' => $this->data['adminTitle'] ?? null,
-                'bookingUrl' => $this->data['bookingUrl'] ?? null
+                'bookingUrl' => $this->data['bookingUrl'] ?? null,
             ]
         );
     }
-
 
     /**
      * Get the attachments for the message.

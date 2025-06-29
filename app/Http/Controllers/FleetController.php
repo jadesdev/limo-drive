@@ -90,6 +90,7 @@ class FleetController extends Controller
 
         cache()->forget("fleet:slug:{$fleet->slug}");
         cache()->forget("fleet:slug:{$fleet->id}");
+
         return $this->dataResponse('Fleet updated successfully', FleetResource::make($fleet));
     }
 

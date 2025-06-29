@@ -15,13 +15,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $admin = User::factory()->create([
             'first_name' => 'Admin',
             'last_name' => 'User',
             'email' => 'admin@example.com',
             'password' => 'Password123',
-            'role' => 'admin',
         ]);
+        $admin->role = 'admin';
+        $admin->save();
 
         $this->call([
             ServiceSeeder::class,

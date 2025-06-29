@@ -11,12 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-
     /**
      * Gathers all summary data for the admin dashboard.
      *
-     * @param string $period The time period for stats ('this_week', 'this_month', 'today').
-     * @return array
+     * @param  string  $period  The time period for stats ('this_week', 'this_month', 'today').
      */
     public function getDashboardSummary(string $period): array
     {
@@ -29,7 +27,6 @@ class DashboardService
             'recently_added_fleet' => $this->getRecentlyAddedFleet(),
         ];
     }
-
 
     /**
      * Gathers and formats data for the income chart.
@@ -44,7 +41,7 @@ class DashboardService
             ->orderBy('date')
             ->get([
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(amount) as total')
+                DB::raw('SUM(amount) as total'),
             ])
             ->pluck('total', 'date');
 
@@ -65,7 +62,6 @@ class DashboardService
             'series' => $chartSeries,
         ];
     }
-
 
     /**
      * Helper to resolve the date range from period or custom dates.
@@ -102,6 +98,7 @@ class DashboardService
             default => 'This Week',
         };
     }
+
     /**
      * Get the main booking summary counts.
      */
@@ -134,7 +131,6 @@ class DashboardService
         $newFleetsCurrent = Fleet::whereBetween('created_at', $currentRange)->count();
         $newFleetsPrevious = Fleet::whereBetween('created_at', $previousRange)->count();
 
-
         return [
             'total_reservations' => [
                 'value' => $currentReservations,
@@ -147,7 +143,7 @@ class DashboardService
             'total_fleets' => [
                 'value' => Fleet::count(),
                 'change_percentage' => $this->calculatePercentageChange($newFleetsCurrent, $newFleetsPrevious),
-            ]
+            ],
         ];
     }
 
@@ -158,11 +154,11 @@ class DashboardService
     {
         $fleet = Fleet::where('is_active', true)->latest('created_at')->first();
 
-        if (!$fleet) {
-            return null;
+        if (! $fleet) {
+            return;
         }
 
-        return  [
+        return [
             'id' => $fleet->id,
             'name' => $fleet->name,
             'thumbnail_url' => $fleet->thumbnail_url,
@@ -172,7 +168,6 @@ class DashboardService
             'description' => $fleet->description,
         ];
     }
-
 
     private function getDateRangeForPeriod(string $period): array
     {
@@ -201,6 +196,7 @@ class DashboardService
             return $current > 0 ? 100.0 : 0.0;
         }
         $change = (($current - $previous) / $previous) * 100;
+
         return round($change, 2);
     }
 }

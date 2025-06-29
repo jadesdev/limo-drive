@@ -20,7 +20,7 @@ class DashboardController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'period' => 'sometimes|string|in:today,this_week,this_month'
+            'period' => 'sometimes|string|in:today,this_week,this_month',
         ]);
 
         $period = $validated['period'] ?? 'this_week';

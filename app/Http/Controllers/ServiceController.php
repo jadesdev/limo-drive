@@ -98,7 +98,7 @@ class ServiceController extends Controller
 
         return $this->dataResponse('Service updated successfully', ServiceResource::make($service));
     }
-    
+
     /**
      * Delete service (Admin)
      */

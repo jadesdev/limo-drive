@@ -23,6 +23,7 @@ class ContactAction
 
         $contact = ContactMessage::create($validated);
         Mail::to($adminEmail)->queue(new MessageMail($contact));
+
         return $contact;
     }
 
@@ -102,7 +103,7 @@ class ContactAction
             'adminName' => $adminName,
             'adminTitle' => $adminTitle,
             'bookingUrl' => $bookingUrl,
-            'subject' => "Enquiry from " . config('app.name'),
+            'subject' => 'Enquiry from ' . config('app.name'),
         ]));
 
         return true;

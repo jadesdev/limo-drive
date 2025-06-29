@@ -38,6 +38,7 @@ class ServiceAction
             $data = $this->prepareArrayData($data);
 
             cache()->forget('services:active_list');
+
             return Service::create($data);
         });
     }

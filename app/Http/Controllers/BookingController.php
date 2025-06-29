@@ -126,7 +126,16 @@ class BookingController extends Controller
 
         return $this->dataResponse(
             'Booking retrieved successfully.',
-            $booking
+            [
+                'id' => $booking->id,
+                'code' => $booking->code,
+                'service_type' => $booking->service_type,
+                'price' => $booking->price,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'created_at' => $booking->created_at->toISOString(),
+                'updated_at' => $booking->updated_at->toISOString(),
+            ]
         );
     }
 }

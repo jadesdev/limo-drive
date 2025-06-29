@@ -3,7 +3,6 @@
 namespace App\Mail\Contact;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -41,7 +40,7 @@ class MessageMail extends Mailable
         return new Content(
             view: 'emails.contact.send',
             with: [
-                'contact' => $this->contact
+                'contact' => $this->contact,
             ]
         );
     }
