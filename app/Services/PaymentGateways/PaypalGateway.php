@@ -4,6 +4,8 @@ namespace App\Services\PaymentGateways;
 
 use App\Models\Booking;
 use App\Services\PayPalService;
+use Log;
+use Str;
 
 class PaypalGateway implements PaymentGatewayInterface
 {
@@ -32,8 +34,7 @@ class PaypalGateway implements PaymentGatewayInterface
     public function confirmPayment(Booking $booking, string $paymentIntentId): array
     {
         $paymentIntent = $this->paypalService->getOrderDetails($paymentIntentId);
-
-        if ($paymentIntent['status'] !== 'APPROVED' || $paymentIntent['status'] !== 'COMPLETED') {
+        if ($paymentIntent['status'] !== 'APPROVED' && $paymentIntent['status'] !== 'COMPLETED') {
             return [
                 'success' => false,
                 'message' => 'Payment has not been approved yet.',
@@ -88,7 +89,7 @@ class PaypalGateway implements PaymentGatewayInterface
             'currency' => $paymentIntent['purchase_units'][0]['amount']['currency_code'],
             'payment_method' => 'paypal',
             'gateway_name' => 'paypal',
-            'gateway_ref' => $paymentIntent['purchase_units'][0]['reference_id'] ?? null,
+            'gateway_ref' => $paymentIntent['purchase_units'][0]['reference_id'] . '_' . Str::random(6) ?? null,
             'gateway_payload' => $paymentIntent,
         ];
     }
