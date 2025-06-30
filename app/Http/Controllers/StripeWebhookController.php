@@ -80,7 +80,7 @@ class StripeWebhookController extends Controller
             'booking_id' => $paymentIntent->metadata->booking_id ?? null,
         ]);
 
-        $success = $this->bookingPaymentService->processStripeWebhook($paymentIntent);
+        $success = $this->bookingPaymentService->processWebhook('stripe',$paymentIntent);
 
         if ($success) {
             \Log::info('Booking confirmed via webhook', [

@@ -6,7 +6,7 @@ use App\Events\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\PaymentGateways\PaymentGatewayInterface;
-use App\Services\PaymentGateways\PayPalGateway;
+use App\Services\PaymentGateways\PaypalGateway;
 use App\Services\PaymentGateways\StripeGateway;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +18,7 @@ class BookingPaymentService
 
     public function __construct(
         private StripeGateway $stripeGateway,
-        private PayPalGateway $paypalGateway
+        private PaypalGateway $paypalGateway
     ) {}
 
     /**

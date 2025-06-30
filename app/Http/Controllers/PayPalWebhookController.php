@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\BookingPaymentService;
 use App\Services\PayPalService;
 use App\Traits\ApiResponse;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,7 @@ class PayPalWebhookController extends Controller
 
     public function __construct(private PayPalService $paypalService) {}
 
+    #[ExcludeRouteFromDocs]
     public function handleWebhook(Request $request)
     {
         try {
@@ -113,7 +115,7 @@ class PayPalWebhookController extends Controller
 
         Log::info('PayPal order approved', ['order_id' => $orderId]);
         $bookingService = app(BookingPaymentService::class);
-        $success = $bookingService->processPaypalWebhook($bookingId, $webhookData);
+        $success = $bookingService->processWebhook('paypal',$webhookData);
 
         if ($success) {
             \Log::info('Booking confirmed via webhook', [
