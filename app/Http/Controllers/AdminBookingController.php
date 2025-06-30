@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\DriverAssignedToBooking;
+use App\Events\TripCompleted;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\Booking\BookingResource;
 use App\Models\Booking;
@@ -182,6 +183,9 @@ class AdminBookingController extends Controller
             'status' => $validated['status'],
         ]);
 
+        if ($validated['status'] === 'completed') {
+            event(new TripCompleted($booking));
+        }
         return $this->dataResponse(
             'Booking status updated successfully.',
             new BookingResource($booking->fresh()->load('driver'))
