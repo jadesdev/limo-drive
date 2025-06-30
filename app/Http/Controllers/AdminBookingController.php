@@ -175,7 +175,7 @@ class AdminBookingController extends Controller
 
     /**
      * Update Booking Status
-     */ 
+     */
     public function updateStatus(Request $request, Booking $booking): JsonResponse
     {
         $validated = $request->validate([
@@ -189,6 +189,7 @@ class AdminBookingController extends Controller
         if ($validated['status'] === 'completed') {
             event(new TripCompleted($booking));
         }
+
         return $this->dataResponse(
             'Booking status updated successfully.',
             new BookingResource($booking->fresh()->load('driver'))

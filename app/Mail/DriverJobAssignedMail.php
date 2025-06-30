@@ -17,7 +17,7 @@ class DriverJobAssignedMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(public Booking $booking,) {}
+    public function __construct(public Booking $booking) {}
 
     /**
      * Get the message envelope.

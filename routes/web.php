@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return response()->json([
@@ -14,5 +14,6 @@ Route::get('/', function () {
 Route::get('/cron', function () {
     Artisan::call('queue:work', ['--stop-when-empty' => true]);
     Artisan::call('queue:retry all');
+
     return response()->json(['message' => 'Queue processed successfully']);
 });

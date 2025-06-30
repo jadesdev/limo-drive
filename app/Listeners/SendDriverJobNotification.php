@@ -3,8 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\DriverAssignedToBooking;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Mail\DriverJobAssignedMail;
 use Illuminate\Support\Facades\Mail;
 

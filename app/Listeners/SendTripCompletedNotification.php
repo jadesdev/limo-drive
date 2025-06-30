@@ -3,10 +3,8 @@
 namespace App\Listeners;
 
 use App\Events\TripCompleted;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\TripCompletedMail;
+use Illuminate\Support\Facades\Mail;
 
 class SendTripCompletedNotification
 {

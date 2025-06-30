@@ -92,7 +92,7 @@ class ContactAction
         ]);
 
         // Prepare variables for the reply email view
-        $adminName = config('mail.from.name', 'The LuxeRide Team');
+        $adminName = config('mail.from.name', 'The Ikenga Limo Team');
         $adminTitle = 'Customer Service Team';
         $responseMessage = $replyData['message'];
         $bookingUrl = $replyData['booking_url'] ?? null;

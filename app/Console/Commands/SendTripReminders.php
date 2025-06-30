@@ -41,6 +41,7 @@ class SendTripReminders extends Command
 
         if ($bookings->isEmpty()) {
             $this->info('No upcoming bookings to remind.');
+
             return;
         }
 

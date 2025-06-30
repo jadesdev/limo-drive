@@ -2,8 +2,6 @@
 
 namespace App\Services\PaymentGateways;
 
-use Illuminate\Support\Facades\DB;
-
 use App\Models\Booking;
 use App\Services\PayPalService;
 
@@ -66,7 +64,7 @@ class PaypalGateway implements PaymentGatewayInterface
     {
         $bookingId = $this->extractBookingIdFromWebhook($paymentResponse);
 
-        if (!$bookingId) {
+        if (! $bookingId) {
             return null;
         }
 

@@ -25,7 +25,7 @@
         @if (isset($bookingUrl))
             <a href="{{ $bookingUrl }}" class="btn btn-primary">Book Now</a>
         @endif
-        <a href="mailto:{{ config('app.email', 'support@luxeride.com') }}?subject=Re: {{ $subject }}"
+        <a href="mailto:{{ config('app.email', 'support@ikengalimo.com') }}?subject=Re: {{ $subject }}"
             class="btn btn-secondary">Reply to This Email</a>
     </div>
 
@@ -33,13 +33,13 @@
     <div class="alert alert-info">
         <strong>🕒 Business Hours:</strong> Monday - Friday: 9:00 AM - 6:00 PM | Saturday - Sunday: 10:00 AM - 4:00 PM<br>
         <strong>📞 24/7 Booking Hotline:</strong> (555) 000-0000<br>
-        <strong>📧 Email:</strong> support@luxeride.com
+        <strong>📧 Email:</strong> support@ikengalimo.com
     </div>
 
     <p>We look forward to serving you and providing an exceptional limousine experience.</p>
 
     <p>Best regards,<br>
-        {{ $adminName ?? 'The LuxeRide Team' }}<br>
+        {{ $adminName ?? 'The Ikenga Limo Team' }}<br>
         <span class="text-muted">{{ $adminTitle ?? 'Customer Service Team' }}</span>
     </p>
 @endsection

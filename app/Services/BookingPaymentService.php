@@ -5,9 +5,9 @@ namespace App\Services;
 use App\Events\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\PaymentGateways\PaymentGatewayInterface;
 use App\Services\PaymentGateways\PayPalGateway;
 use App\Services\PaymentGateways\StripeGateway;
-use App\Services\PaymentGateways\PaymentGatewayInterface;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -15,7 +15,7 @@ use InvalidArgumentException;
 class BookingPaymentService
 {
     private const SUPPORTED_GATEWAYS = ['stripe', 'paypal'];
-    
+
     public function __construct(
         private StripeGateway $stripeGateway,
         private PayPalGateway $paypalGateway
@@ -27,7 +27,7 @@ class BookingPaymentService
     public function createPaymentIntent(Booking $booking): array
     {
         $gateway = $this->getPaymentGateway($booking->payment_method);
-        
+
         return $gateway->createPaymentIntent($booking);
     }
 
@@ -39,20 +39,20 @@ class BookingPaymentService
         try {
             $booking = Booking::findOrFail($bookingId);
             $gateway = $this->getPaymentGateway($booking->payment_method);
-            
+
             $result = $gateway->confirmPayment($booking, $paymentIntentId);
-            
+
             if ($result['success']) {
                 $this->processSuccessfulPayment($booking, $result['payment_data']);
             }
-            
+
             return $result;
-            
+
         } catch (Exception $e) {
             Log::error('Payment confirmation failed', [
                 'booking_id' => $bookingId,
                 'payment_intent_id' => $paymentIntentId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
@@ -70,33 +70,33 @@ class BookingPaymentService
         try {
             $paymentGateway = $this->getPaymentGateway($gateway);
             $webhookData = $paymentGateway->processWebhook($payload);
-            
-            if (!$webhookData) {
+
+            if (! $webhookData) {
                 return false;
             }
-            
+
             $booking = $this->findBookingFromWebhook($webhookData);
-            if (!$booking) {
+            if (! $booking) {
                 return false;
             }
-            
+
             $this->processSuccessfulPayment($booking, $webhookData);
-            
+
             Log::info('Booking payment confirmed via webhook', [
                 'booking_id' => $booking->id,
                 'booking_code' => $booking->code,
                 'gateway' => $gateway,
-                'payment_intent_id' => $webhookData['payment_intent_id']
+                'payment_intent_id' => $webhookData['payment_intent_id'],
             ]);
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             Log::error('Webhook payment processing failed', [
                 'gateway' => $gateway,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
@@ -106,11 +106,11 @@ class BookingPaymentService
      */
     private function getPaymentGateway(string $method): PaymentGatewayInterface
     {
-        if (!in_array($method, self::SUPPORTED_GATEWAYS)) {
+        if (! in_array($method, self::SUPPORTED_GATEWAYS)) {
             throw new InvalidArgumentException("Unsupported payment method: {$method}");
         }
-        
-        return match($method) {
+
+        return match ($method) {
             'stripe' => $this->stripeGateway,
             'paypal' => $this->paypalGateway,
         };
@@ -124,14 +124,14 @@ class BookingPaymentService
         if ($booking->status !== 'pending_payment') {
             return;
         }
-        
+
         $booking->update([
             'status' => 'in_progress',
             'payment_status' => 'paid',
         ]);
-        
+
         $this->createOrUpdatePaymentRecord($booking, $paymentData);
-        
+
         event(new BookingConfirmed($booking->fresh()));
     }
 
@@ -163,23 +163,24 @@ class BookingPaymentService
     private function findBookingFromWebhook(array $webhookData): ?Booking
     {
         $bookingId = $webhookData['booking_id'] ?? null;
-        
-        if (!$bookingId) {
+
+        if (! $bookingId) {
             Log::warning('Webhook missing booking_id', [
-                'payment_intent_id' => $webhookData['payment_intent_id'] ?? 'unknown'
+                'payment_intent_id' => $webhookData['payment_intent_id'] ?? 'unknown',
             ]);
+
             return null;
         }
-        
+
         $booking = Booking::find($bookingId);
-        
-        if (!$booking) {
+
+        if (! $booking) {
             Log::warning('Booking not found for webhook', [
                 'booking_id' => $bookingId,
-                'payment_intent_id' => $webhookData['payment_intent_id'] ?? 'unknown'
+                'payment_intent_id' => $webhookData['payment_intent_id'] ?? 'unknown',
             ]);
         }
-        
+
         return $booking;
     }
 
@@ -189,11 +190,11 @@ class BookingPaymentService
     private function getCustomerName(Booking $booking): string
     {
         $customer = $booking->customer;
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return '';
         }
-        
+
         return trim($customer->first_name . ' ' . $customer->last_name);
     }
 }

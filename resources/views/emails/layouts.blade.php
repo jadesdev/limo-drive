@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', config('app.name', 'LuxeRide'))</title>
+    <title>@yield('title', config('app.name', 'Ikenga Limo'))</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -416,7 +416,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <h1>{{ config('app.name', 'LuxeRide') }}</h1>
+            <h1>{{ config('app.name', 'Ikenga Limo') }}</h1>
             <p>{{ config('app.tagline', 'Premium Limousine Service') }}</p>
         </div>
 
@@ -433,13 +433,13 @@
                 <div>
                     <h3>@yield('footer_title', 'Need Help?')</h3>
                     <p class="footer-contact">
-                        @yield('footer_contact', '📞 (555) 000-0000 | ✉️ support@luxeride.com')
+                        @yield('footer_contact', '📞 (555) 000-0000 | ✉️ support@ikengalimo.com')
                     </p>
                 </div>
 
                 <div class="footer-divider">
                     <p class="footer-copyright">
-                        © {{ date('Y') }} {{ config('app.name', 'LuxeRide') }}. All rights reserved.
+                        © {{ date('Y') }} {{ config('app.name', 'Ikenga Limo') }}. All rights reserved.
                     </p>
                     <p class="footer-meta">
                         Email sent on {{ now()->format('M d, Y \a\t g:i A') }}

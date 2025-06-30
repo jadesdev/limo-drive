@@ -68,7 +68,7 @@ class StripeGateway implements PaymentGatewayInterface
     {
         $bookingId = $paymentIntent->metadata->booking_id ?? null;
 
-        if (!$bookingId) {
+        if (! $bookingId) {
             return null;
         }
 
