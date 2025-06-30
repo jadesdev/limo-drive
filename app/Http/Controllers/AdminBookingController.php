@@ -173,6 +173,9 @@ class AdminBookingController extends Controller
         );
     }
 
+    /**
+     * Update Booking Status
+     */ 
     public function updateStatus(Request $request, Booking $booking): JsonResponse
     {
         $validated = $request->validate([
