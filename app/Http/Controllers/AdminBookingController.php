@@ -61,11 +61,11 @@ class AdminBookingController extends Controller
      */
     public function calendar(Request $request)
     {
-        return Cache::remember('bookings_calendar_' . md5($request->query()), now()->addHours(1), function () use ($request) {
+        return Cache::remember('bookings_calendar_' . md5(json_encode($request->query())), now()->addHours(1), function () use ($request) {
             $validated = $request->validate([
-                /** @example 2025-06-27 */
+                /** @example 2025-06-07 */
                 'start_date' => 'required|date_format:Y-m-d',
-                /** @example 2025-06-27 */
+                /** @example 2025-07-27 */
                 'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
                 'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
             ]);
