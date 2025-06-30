@@ -3,13 +3,17 @@
 namespace App\Services\Route;
 
 use App\Services\GoogleMapsService;
+use Cache;
 use Illuminate\Validation\ValidationException;
 
 class RouteService
 {
-    public function __construct(
-        private bool $demoMode = true
-    ) {}
+    private bool $demoMode;
+
+    public function __construct()
+    {
+        $this->demoMode = config('services.google_maps.demo', false);
+    }
 
     public function getRouteInfo(array $data): array
     {
@@ -17,7 +21,38 @@ class RouteService
             return $this->getSimulatedTripInfo($data['service_type']);
         }
 
-        return $this->getRealRouteInfo($data['pickup_address'], $data['dropoff_address']);
+        return $this->getCachedRouteInfo($data['pickup_address'], $data['dropoff_address']);
+    }
+
+    /**
+     * Get route info with caching layer
+     */
+    private function getCachedRouteInfo(string $pickupAddress, string $dropoffAddress): array
+    {
+        $cacheKey = $this->generateRouteCacheKey($pickupAddress, $dropoffAddress);
+
+        return Cache::remember($cacheKey, now()->addHours(24), function () use ($pickupAddress, $dropoffAddress) {
+            return $this->getRealRouteInfo($pickupAddress, $dropoffAddress);
+        });
+    }
+
+    /**
+     * Generate cache key for route
+     */
+    private function generateRouteCacheKey(string $pickup, string $dropoff): string
+    {
+        $normalizedPickup = $this->normalizeAddress($pickup);
+        $normalizedDropoff = $this->normalizeAddress($dropoff);
+
+        return 'route_info:' . md5($normalizedPickup . '|' . $normalizedDropoff);
+    }
+
+    /**
+     * Normalize address for consistent caching
+     */
+    private function normalizeAddress(string $address): string
+    {
+        return strtolower(trim(preg_replace('/\s+/', ' ', $address)));
     }
 
     private function getRealRouteInfo(string $pickupAddress, string $dropoffAddress): array
