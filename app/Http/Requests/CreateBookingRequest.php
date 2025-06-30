@@ -100,8 +100,6 @@ class CreateBookingRequest extends FormRequest
             // Payment
             'payment_method.required' => 'Payment method is required',
             'payment_method.in' => 'Invalid payment method: paypal or stripe',
-            'payment.intent_id.required_if' => 'Payment intent is required for card payments',
-            'payment.intent_id.starts_with' => 'Invalid payment intent',
             'price.required' => 'Price is required',
             'price.min' => 'Minimum price is $10',
             'price.max' => 'Maximum price exceeded',
