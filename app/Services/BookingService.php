@@ -123,7 +123,9 @@ class BookingService
     public function updateBooking(array $data, Booking $booking): Booking
     {
         $updateData = $this->buildUpdateData($data, $booking);
-        $booking->update($updateData);
+        if (!empty($updateData)) {
+            $booking->update($updateData);
+        }
 
         return $booking->fresh();
     }

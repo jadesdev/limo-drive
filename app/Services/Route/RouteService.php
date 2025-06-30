@@ -44,7 +44,7 @@ class RouteService
         $normalizedPickup = $this->normalizeAddress($pickup);
         $normalizedDropoff = $this->normalizeAddress($dropoff);
 
-        return 'route_info:' . md5($normalizedPickup . '|' . $normalizedDropoff);
+        return 'route_info:' . hash('sha256', $normalizedPickup . '|' . $normalizedDropoff);
     }
 
     /**

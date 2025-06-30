@@ -41,7 +41,7 @@ class GoogleMapsService
         $cacheKey = $this->generateCacheKey($origin, $destination);
 
         // Try to get from cache first (cache for 24 hours)
-        return Cache::remember($cacheKey, 60 * 60 * 24, function () use ($origin, $destination) {
+        return Cache::remember($cacheKey, now()->addHours(24), function () use ($origin, $destination) {
             return $this->fetchDistanceMatrix($origin, $destination);
         });
     }
@@ -55,7 +55,7 @@ class GoogleMapsService
         $normalizedOrigin = strtolower(trim($origin));
         $normalizedDestination = strtolower(trim($destination));
 
-        return 'google_maps_distance:' . md5($normalizedOrigin . '|' . $normalizedDestination);
+        return 'google_maps_distance:' . hash('sha256', $normalizedOrigin . '|' . $normalizedDestination);
     }
 
     /**
