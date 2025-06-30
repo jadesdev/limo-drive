@@ -60,7 +60,7 @@ class RouteService
         $googleMapsService = app(GoogleMapsService::class);
         $routeInfo = $googleMapsService->getDistanceMatrix($pickupAddress, $dropoffAddress);
 
-        if (!$routeInfo) {
+        if (! $routeInfo) {
             throw ValidationException::withMessages([
                 'route' => ['We could not calculate the route at this time. Please try again later.'],
             ]);

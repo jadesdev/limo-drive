@@ -16,6 +16,7 @@ use Str;
 class BookingService
 {
     private const DISTANCE_SERVICES = ['point_to_point', 'airport_pickup', 'airport_transfer', 'round_trip'];
+
     private const HOURLY_SERVICES = ['wedding', 'event', 'other'];
 
     public function __construct(
@@ -61,8 +62,9 @@ class BookingService
 
             return $this->formatDistanceQuoteData($fleet, $pricing, $routeInfo);
         });
+
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -83,7 +85,7 @@ class BookingService
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -123,7 +125,7 @@ class BookingService
     public function updateBooking(array $data, Booking $booking): Booking
     {
         $updateData = $this->buildUpdateData($data, $booking);
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $booking->update($updateData);
         }
 
@@ -157,7 +159,7 @@ class BookingService
         $quoteData = $this->getQuote($this->buildQuoteObject($data));
         $selectedFleetQuote = $quoteData->firstWhere('id', $data['fleet_id']);
 
-        if (!$selectedFleetQuote) {
+        if (! $selectedFleetQuote) {
             throw ValidationException::withMessages([
                 'fleet_id' => 'The selected vehicle is not available for the specified requirements.',
             ]);

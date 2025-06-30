@@ -35,6 +35,7 @@ class CustomerService
             $this->updateCustomerData($currentCustomer, $customerData);
             $currentCustomer->last_active = now();
             $currentCustomer->save();
+
             return null; // No customer_id change needed
         }
 

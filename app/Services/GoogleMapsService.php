@@ -72,6 +72,7 @@ class GoogleMapsService
 
         if ($response->failed()) {
             Log::error('Google Maps API request failed: ' . $response->body());
+
             return null;
         }
 
@@ -80,12 +81,14 @@ class GoogleMapsService
         // Check if the overall API call was successful
         if ($data['status'] !== 'OK') {
             Log::error('Google Maps API returned error status: ' . $data['status']);
+
             return null;
         }
 
         // Check if we have valid rows and elements
         if (empty($data['rows']) || empty($data['rows'][0]['elements'])) {
             Log::error('Google Maps API returned empty results');
+
             return null;
         }
 
