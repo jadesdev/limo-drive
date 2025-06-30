@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Events\DriverCreated;
 use App\Models\Driver;
 use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
@@ -16,7 +17,7 @@ class DriverAction
      */
     public function create(array $data): Driver
     {
-        return DB::transaction(function () use ($data) {
+        $driver = DB::transaction(function () use ($data) {
             if (isset($data['profile_image']) && $data['profile_image'] instanceof UploadedFile) {
                 $data['profile_image'] = $this->fileUploadService->upload($data['profile_image'], 'drivers/profiles')['file_path'];
             }
@@ -31,6 +32,9 @@ class DriverAction
 
             return Driver::create($data);
         });
+        event(new DriverCreated($driver));
+
+        return $driver;
     }
 
     /**
