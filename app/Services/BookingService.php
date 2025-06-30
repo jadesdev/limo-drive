@@ -7,28 +7,36 @@ use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Fleet;
+use App\Services\Pricing\PricingCalculator;
+use App\Services\Route\RouteService;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Str;
 
 class BookingService
 {
+    private const DISTANCE_SERVICES = ['point_to_point', 'airport_pickup', 'airport_transfer', 'round_trip'];
+
+    private const HOURLY_SERVICES = ['wedding', 'event', 'other'];
+
+    public function __construct(
+        private PricingCalculator $pricingCalculator,
+        private RouteService $routeService,
+        private CustomerService $customerService
+    ) {}
+
     /**
      * Get a quote for a trip based on service type and other parameters.
-     *
-     * @throws ValidationException
      */
     public function getQuote(array $data)
     {
         $serviceType = $data['service_type'] ?? 'point_to_point';
 
-        $distanceServices = ['point_to_point', 'airport_pickup', 'airport_transfer', 'round_trip'];
-        if (in_array($serviceType, $distanceServices)) {
+        if (in_array($serviceType, self::DISTANCE_SERVICES)) {
             return $this->getDistanceBasedQuote($data);
         }
 
-        $hourlyServices = ['wedding', 'event', 'other'];
-        if (in_array($serviceType, $hourlyServices)) {
+        if (in_array($serviceType, self::HOURLY_SERVICES)) {
             return $this->getHourlyQuote($data);
         }
 
@@ -42,70 +50,17 @@ class BookingService
      */
     protected function getDistanceBasedQuote(array $data)
     {
-        $demoMode = true;
-        if ($demoMode) {
-            $routeInfo = $this->getSimulatedTripInfo($data['service_type']);
-        } else {
-            $googleMapsService = app(GoogleMapsService::class);
-            $routeInfo = $googleMapsService->getDistanceMatrix(
-                $data['pickup_address'],
-                $data['dropoff_address']
+        $routeInfo = $this->routeService->getRouteInfo($data);
+        $availableFleets = $this->getAvailableFleets($data['passenger_count'], $data['bag_count']);
+
+        return $vehicles = $availableFleets->map(function (Fleet $fleet) use ($routeInfo, $data) {
+            $pricing = $this->pricingCalculator->calculateDistanceBasedPrice(
+                $fleet,
+                $routeInfo['distance_miles'],
+                $data['service_type']
             );
-            if (! $routeInfo) {
-                throw ValidationException::withMessages([
-                    'route' => ['We could not calculate the route at this time. Please try again later.'],
-                ]);
-            }
-        }
 
-        $distanceInMiles = $routeInfo['distance_miles'];
-        $durationInMinutes = round($routeInfo['duration_seconds'] / 60);
-        $durationText = $routeInfo['duration_text'] ?? null;
-
-        $fleets = Fleet::active()
-            ->where('seats', '>=', $data['passenger_count'])
-            ->where('bags', '>=', $data['bag_count'])
-            ->get();
-
-        if ($fleets->isEmpty()) {
-            throw ValidationException::withMessages([
-                'capacity' => ['Sorry, we have no vehicles available that can accommodate your party size.'],
-            ]);
-        }
-
-        /** @var Collection<DistanceBasedQuoteResource> $vehicles */
-        return $vehicles = $fleets->map(function (Fleet $fleet) use ($distanceInMiles, $data, $durationText, $durationInMinutes) {
-
-            $milageCost = $fleet->rate_per_mile * $distanceInMiles;
-            $baseFare = $fleet->base_fee + $milageCost;
-            $surcharges = 20; // fixed 20$
-            $totalPrice = $baseFare + $surcharges;
-
-            if ($data['service_type'] === 'round_trip') {
-                $totalPrice *= 2;
-            }
-
-            return [
-                'id' => $fleet->id,
-                'name' => $fleet->name,
-                'slug' => $fleet->slug,
-                'seats' => $fleet->seats,
-                'bags' => $fleet->bags,
-                'thumbnail_url' => $fleet->thumbnail_url,
-                'image_urls' => $fleet->image_urls,
-                'price' => round($totalPrice, 2),
-                'estimated_duration' => $durationText,
-                'price_breakdown' => [
-                    'base_fare' => round($baseFare, 2),
-                    'surcharges' => round($surcharges, 2),
-                    'total' => round($totalPrice, 2),
-                ],
-                'distance' => [
-                    'miles' => $distanceInMiles,
-                    'minutes' => $durationInMinutes,
-                    'description' => $durationText,
-                ],
-            ];
+            return $this->formatDistanceQuoteData($fleet, $pricing, $routeInfo);
         });
 
         return DistanceBasedQuoteResource::collection(
@@ -118,55 +73,15 @@ class BookingService
      */
     protected function getHourlyQuote(array $data)
     {
-        if (empty($data['duration_hours'])) {
-            throw ValidationException::withMessages([
-                'duration_hours' => ['Booking duration is required for this service type.'],
-            ]);
-        }
+        $this->validateHourlyData($data);
 
-        $hours = (int) $data['duration_hours'];
+        $availableFleets = $this->getAvailableFleets($data['passenger_count'], $data['bag_count']);
+        $requestedHours = (int) $data['duration_hours'];
 
-        $fleets = Fleet::active()
-            ->where('seats', '>=', $data['passenger_count'])
-            ->where('bags', '>=', $data['bag_count'])
-            ->get();
+        return $vehicles = $availableFleets->map(function (Fleet $fleet) use ($requestedHours) {
+            $pricing = $this->pricingCalculator->calculateHourlyPrice($fleet, $requestedHours);
 
-        if ($fleets->isEmpty()) {
-            throw ValidationException::withMessages([
-                'capacity' => ['Sorry, we have no vehicles available that can accommodate your party size.'],
-            ]);
-        }
-
-        /** @var Collection<HourlyBasedQuoteResource> $vehicles */
-        return $vehicles = $fleets->map(function (Fleet $fleet) use ($hours) {
-            $bookingHours = $hours;
-
-            if ($bookingHours < $fleet->minimum_hours) {
-                $bookingHours = $fleet->minimum_hours;
-            }
-
-            $hourlyRate = $fleet->rate_per_hour * $bookingHours;
-            $surcharges = 20;
-            $totalPrice = $hourlyRate + $surcharges;
-
-            return [
-                'id' => $fleet->id,
-                'name' => $fleet->name,
-                'slug' => $fleet->slug,
-                'seats' => $fleet->seats,
-                'bags' => $fleet->bags,
-                'thumbnail_url' => $fleet->thumbnail_url,
-                'image_urls' => $fleet->image_urls,
-                'price' => round($totalPrice, 2),
-                'booking_duration' => "{$bookingHours} hours",
-                'price_breakdown' => [
-                    'base_fare' => round($hourlyRate, 2),
-                    'surcharges' => round($surcharges, 2),
-                    'hourly_rate' => round($fleet->rate_per_hour, 2),
-                    'total_hours' => $bookingHours,
-                    'total' => round($totalPrice, 2),
-                ],
-            ];
+            return $this->formatHourlyQuoteData($fleet, $pricing);
         });
 
         return HourlyBasedQuoteResource::collection(
@@ -176,80 +91,17 @@ class BookingService
 
     /**
      * Create a new booking with a 'pending_payment' status.
-     *
-     * @param  array  $data  Validated booking data.
-     * @return Booking The newly created booking model instance.
-     *
-     * @throws ValidationException
      */
     public function createBooking(array $data): Booking
     {
-        $quoteObject = [
-            'service_type' => $data['service_type'],
-            'fleet_id' => $data['fleet_id'],
-            'pickup_address' => $data['pickup']['address'] ?? null,
-            'dropoff_address' => $data['dropoff']['address'] ?? null,
-            'passenger_count' => $data['passengers'] ?? 1,
-            'bag_count' => $data['bags'] ?? 0,
-            'duration_hours' => $data['duration_hours'] ?? 1,
-        ];
-        $quoteData = $this->getQuote($quoteObject);
-        $selectedFleetQuote = $quoteData->firstWhere('id', $data['fleet_id']);
+        $selectedFleetQuote = $this->validateFleetSelection($data);
+        $customer = $this->customerService->findOrCreateCustomer($data['customer'] ?? []);
 
-        if (! $selectedFleetQuote) {
-            throw ValidationException::withMessages([
-                'fleet_id' => 'The selected vehicle is not available for the specified requirements.',
-            ]);
-        }
-
-        $finalPrice = $selectedFleetQuote['price'];
-        // Find or create customer by email
-        $customerData = $data['customer'] ?? [];
-        $customer = null;
-        if (! empty($customerData['email'])) {
-            $customer = Customer::firstOrNew(['email' => $customerData['email']]);
-            $customer->first_name = $customerData['first_name'] ?? $customer->first_name;
-            $customer->last_name = $customerData['last_name'] ?? $customer->last_name;
-            $customer->phone = $customerData['phone'] ?? $customer->phone;
-            $customer->language = $customerData['language'] ?? $customer->language;
-            $customer->last_active = now();
-            $customer->save();
-            // Update bookings_count
-            $customer->bookings_count = $customer->bookings()->count();
-            $customer->save();
-        }
-        $bookingData = [
-            'fleet_id' => $data['fleet_id'],
-            'service_type' => $data['service_type'],
-            'price' => $finalPrice,
-            'status' => 'pending_payment',
-            'payment_status' => 'unpaid',
-            'customer_id' => $customer ? $customer->id : null,
-            // Pickup details
-            'pickup_datetime' => $data['pickup']['datetime'],
-            'pickup_address' => $data['pickup']['address'],
-            'pickup_latitude' => $data['pickup']['latitude'] ?? null,
-            'pickup_longitude' => $data['pickup']['longitude'] ?? null,
-            // Dropoff details (if provided)
-            'dropoff_address' => $data['dropoff']['address'] ?? null,
-            'dropoff_latitude' => $data['dropoff']['latitude'] ?? null,
-            'dropoff_longitude' => $data['dropoff']['longitude'] ?? null,
-            // Trip details
-            'passenger_count' => $data['passengers'],
-            'bag_count' => $data['bags'],
-            'duration_hours' => $data['duration_hours'] ?? null,
-            // Optional fields
-            'is_accessible' => $data['accessible'] ?? false,
-            'is_return_service' => $data['return_service'] ?? false,
-            'payment_method' => $data['payment_method'],
-            'notes' => $data['notes'] ?? null,
-        ];
-
+        $bookingData = $this->buildBookingData($data, $selectedFleetQuote['price'], $customer);
         $booking = Booking::create($bookingData);
+
         if ($customer) {
-            $customer->bookings_count = $customer->bookings()->count();
-            $customer->last_active = now();
-            $customer->save();
+            $this->customerService->updateCustomerStats($customer);
         }
 
         return $booking;
@@ -258,147 +110,247 @@ class BookingService
     /**
      * Get booking details by ID or Code
      */
-    public function getBookingDetails($id)
+    public function getBookingDetails($id): Booking
     {
-        if (Str::isUuid($id)) {
-            $booking = Booking::with(['fleet', 'latestPayment'])->findOrFail($id);
-        } else {
-            $booking = Booking::with(['fleet', 'latestPayment'])->where('code', $id)->firstOrFail();
-        }
+        $query = Booking::with(['fleet', 'latestPayment']);
 
-        return $booking;
-    }
-
-    /**
-     * Helper to get simulated trip info based on service type.
-     */
-    protected function getSimulatedTripInfo(string $serviceType): array
-    {
-        $distanceMiles = rand(5, 60);
-        $durationSeconds = rand(60, 3600);
-        $hours = floor($durationSeconds / 3600);
-        $minutes = round(($durationSeconds % 3600) / 60);
-        $durationText = ($hours > 0 ? "{$hours} hours " : '') . "{$minutes} mins";
-
-        return [
-            'distance_miles' => $distanceMiles,
-            'duration_seconds' => $durationSeconds,
-            'duration_text' => $durationText,
-            'distance_text' => $distanceMiles . ' miles',
-        ];
+        return Str::isUuid($id)
+            ? $query->findOrFail($id)
+            : $query->where('code', $id)->firstOrFail();
     }
 
     /**
      * Update a booking with validated data.
-     * Handles mapping of nested request arrays to flat DB columns.
      */
     public function updateBooking(array $data, Booking $booking): Booking
     {
-        $update = [];
-
-        // Customer Details
-        if (isset($data['customer']) && ! empty($data['customer']['email'])) {
-            $customerData = $data['customer'];
-            $currentCustomer = $booking->customer;
-            if ($currentCustomer && $currentCustomer->email === $customerData['email']) {
-                // Update existing customer fields
-                if (isset($customerData['first_name'])) {
-                    $currentCustomer->first_name = $customerData['first_name'];
-                }
-                if (isset($customerData['last_name'])) {
-                    $currentCustomer->last_name = $customerData['last_name'];
-                }
-                if (isset($customerData['phone'])) {
-                    $currentCustomer->phone = $customerData['phone'];
-                }
-                if (isset($customerData['language'])) {
-                    $currentCustomer->language = $customerData['language'];
-                }
-                $currentCustomer->last_active = now();
-                $currentCustomer->save();
-            } else {
-                // Find or create new customer by email
-                $customer = Customer::firstOrNew(['email' => $customerData['email']]);
-                $customer->first_name = $customerData['first_name'] ?? $customer->first_name;
-                $customer->last_name = $customerData['last_name'] ?? $customer->last_name;
-                $customer->phone = $customerData['phone'] ?? $customer->phone;
-                $customer->language = $customerData['language'] ?? $customer->language;
-                $customer->last_active = now();
-                $customer->save();
-                $update['customer_id'] = $customer->id;
-            }
+        $updateData = $this->buildUpdateData($data, $booking);
+        if (! empty($updateData)) {
+            $booking->update($updateData);
         }
-
-        // Booking Choices
-        if (isset($data['service_type'])) {
-            $update['service_type'] = $data['service_type'];
-        }
-        if (isset($data['fleet_id'])) {
-            $update['fleet_id'] = $data['fleet_id'];
-        }
-
-        // Trip Details
-        if (isset($data['pickup'])) {
-            $pickup = $data['pickup'];
-            if (isset($pickup['datetime'])) {
-                $update['pickup_datetime'] = $pickup['datetime'];
-            }
-            if (isset($pickup['address'])) {
-                $update['pickup_address'] = $pickup['address'];
-            }
-            if (array_key_exists('latitude', $pickup)) {
-                $update['pickup_latitude'] = $pickup['latitude'];
-            }
-            if (array_key_exists('longitude', $pickup)) {
-                $update['pickup_longitude'] = $pickup['longitude'];
-            }
-        }
-        if (isset($data['dropoff'])) {
-            $dropoff = $data['dropoff'];
-            if (isset($dropoff['address'])) {
-                $update['dropoff_address'] = $dropoff['address'];
-            }
-            if (array_key_exists('latitude', $dropoff)) {
-                $update['dropoff_latitude'] = $dropoff['latitude'];
-            }
-            if (array_key_exists('longitude', $dropoff)) {
-                $update['dropoff_longitude'] = $dropoff['longitude'];
-            }
-        }
-        if (isset($data['passengers'])) {
-            $update['passenger_count'] = $data['passengers'];
-        }
-        if (isset($data['bags'])) {
-            $update['bag_count'] = $data['bags'];
-        }
-        if (isset($data['accessible'])) {
-            $update['is_accessible'] = $data['accessible'];
-        }
-        if (isset($data['return_service'])) {
-            $update['is_return_service'] = $data['return_service'];
-        }
-        if (isset($data['duration_hours'])) {
-            $update['duration_hours'] = $data['duration_hours'];
-        }
-
-        // Pricing
-        if (isset($data['price'])) {
-            $update['price'] = $data['price'];
-        }
-        if (isset($data['payment'])) {
-            $payment = $data['payment'];
-            if (isset($payment['method'])) {
-                $update['payment_method'] = $payment['method'];
-            }
-        }
-        // Additional Info
-        if (array_key_exists('notes', $data)) {
-            $update['notes'] = $data['notes'];
-        }
-
-        // Actually update the booking
-        $booking->update($update);
 
         return $booking->fresh();
+    }
+
+    /**
+     * Get available fleets based on capacity requirements
+     */
+    private function getAvailableFleets(int $passengerCount, int $bagCount): Collection
+    {
+        $fleets = Fleet::active()
+            ->where('seats', '>=', $passengerCount)
+            ->where('bags', '>=', $bagCount)
+            ->get();
+
+        if ($fleets->isEmpty()) {
+            throw ValidationException::withMessages([
+                'capacity' => ['Sorry, we have no vehicles available that can accommodate your party size.'],
+            ]);
+        }
+
+        return $fleets;
+    }
+
+    /**
+     * Validate fleet selection against quote
+     */
+    private function validateFleetSelection(array $data): array
+    {
+        $quoteData = $this->getQuote($this->buildQuoteObject($data));
+        $selectedFleetQuote = $quoteData->firstWhere('id', $data['fleet_id']);
+
+        if (! $selectedFleetQuote) {
+            throw ValidationException::withMessages([
+                'fleet_id' => 'The selected vehicle is not available for the specified requirements.',
+            ]);
+        }
+
+        return $selectedFleetQuote;
+    }
+
+    /**
+     * Build quote object from booking data
+     */
+    private function buildQuoteObject(array $data): array
+    {
+        return [
+            'service_type' => $data['service_type'],
+            'fleet_id' => $data['fleet_id'],
+            'pickup_address' => $data['pickup']['address'] ?? null,
+            'dropoff_address' => $data['dropoff']['address'] ?? null,
+            'passenger_count' => $data['passengers'] ?? 1,
+            'bag_count' => $data['bags'] ?? 0,
+            'duration_hours' => $data['duration_hours'] ?? 1,
+        ];
+    }
+
+    /**
+     * Build booking data array
+     */
+    private function buildBookingData(array $data, float $price, ?Customer $customer): array
+    {
+        return [
+            'fleet_id' => $data['fleet_id'],
+            'service_type' => $data['service_type'],
+            'price' => $price,
+            'status' => 'pending_payment',
+            'payment_status' => 'unpaid',
+            'customer_id' => $customer?->id,
+            'pickup_datetime' => $data['pickup']['datetime'],
+            'pickup_address' => $data['pickup']['address'],
+            'pickup_latitude' => $data['pickup']['latitude'] ?? null,
+            'pickup_longitude' => $data['pickup']['longitude'] ?? null,
+            'dropoff_address' => $data['dropoff']['address'] ?? null,
+            'dropoff_latitude' => $data['dropoff']['latitude'] ?? null,
+            'dropoff_longitude' => $data['dropoff']['longitude'] ?? null,
+            'passenger_count' => $data['passengers'],
+            'bag_count' => $data['bags'],
+            'duration_hours' => $data['duration_hours'] ?? null,
+            'is_accessible' => $data['accessible'] ?? false,
+            'is_return_service' => $data['return_service'] ?? false,
+            'payment_method' => $data['payment_method'],
+            'notes' => $data['notes'] ?? null,
+        ];
+    }
+
+    /**
+     * Build update data from request
+     */
+    private function buildUpdateData(array $data, Booking $booking): array
+    {
+        $updateData = [];
+
+        // Handle customer updates
+        if (isset($data['customer'])) {
+            $customer = $this->customerService->handleCustomerUpdate($data['customer'], $booking);
+            if ($customer) {
+                $updateData['customer_id'] = $customer->id;
+            }
+        }
+
+        // Map simple fields
+        $fieldMappings = [
+            'service_type' => 'service_type',
+            'fleet_id' => 'fleet_id',
+            'passengers' => 'passenger_count',
+            'bags' => 'bag_count',
+            'accessible' => 'is_accessible',
+            'return_service' => 'is_return_service',
+            'duration_hours' => 'duration_hours',
+            'price' => 'price',
+            'notes' => 'notes',
+        ];
+
+        foreach ($fieldMappings as $requestKey => $dbColumn) {
+            if (array_key_exists($requestKey, $data)) {
+                $updateData[$dbColumn] = $data[$requestKey];
+            }
+        }
+
+        // Handle nested arrays
+        $updateData = array_merge($updateData, $this->mapNestedFields($data));
+
+        return $updateData;
+    }
+
+    /**
+     * Map nested fields (pickup, dropoff, payment)
+     */
+    private function mapNestedFields(array $data): array
+    {
+        $mapped = [];
+
+        // Pickup fields
+        if (isset($data['pickup'])) {
+            $pickupMappings = [
+                'datetime' => 'pickup_datetime',
+                'address' => 'pickup_address',
+                'latitude' => 'pickup_latitude',
+                'longitude' => 'pickup_longitude',
+            ];
+
+            foreach ($pickupMappings as $key => $column) {
+                if (array_key_exists($key, $data['pickup'])) {
+                    $mapped[$column] = $data['pickup'][$key];
+                }
+            }
+        }
+
+        // Dropoff fields
+        if (isset($data['dropoff'])) {
+            $dropoffMappings = [
+                'address' => 'dropoff_address',
+                'latitude' => 'dropoff_latitude',
+                'longitude' => 'dropoff_longitude',
+            ];
+
+            foreach ($dropoffMappings as $key => $column) {
+                if (array_key_exists($key, $data['dropoff'])) {
+                    $mapped[$column] = $data['dropoff'][$key];
+                }
+            }
+        }
+
+        // Payment method
+        if (isset($data['payment_method'])) {
+            $mapped['payment_method'] = $data['payment_method'];
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * Format distance-based quote data
+     */
+    private function formatDistanceQuoteData(Fleet $fleet, array $pricing, array $routeInfo): array
+    {
+        return [
+            'id' => $fleet->id,
+            'name' => $fleet->name,
+            'slug' => $fleet->slug,
+            'seats' => $fleet->seats,
+            'bags' => $fleet->bags,
+            'thumbnail_url' => $fleet->thumbnail_url,
+            'image_urls' => $fleet->image_urls,
+            'price' => $pricing['total'],
+            'estimated_duration' => $routeInfo['duration_text'],
+            'price_breakdown' => $pricing['breakdown'],
+            'distance' => [
+                'miles' => $routeInfo['distance_miles'],
+                'minutes' => round($routeInfo['duration_seconds'] / 60),
+                'description' => $routeInfo['duration_text'],
+            ],
+        ];
+    }
+
+    /**
+     * Format hourly-based quote data
+     */
+    private function formatHourlyQuoteData(Fleet $fleet, array $pricing): array
+    {
+        return [
+            'id' => $fleet->id,
+            'name' => $fleet->name,
+            'slug' => $fleet->slug,
+            'seats' => $fleet->seats,
+            'bags' => $fleet->bags,
+            'thumbnail_url' => $fleet->thumbnail_url,
+            'image_urls' => $fleet->image_urls,
+            'price' => $pricing['total'],
+            'booking_duration' => "{$pricing['hours']} hours",
+            'price_breakdown' => $pricing['breakdown'],
+        ];
+    }
+
+    /**
+     * Validate hourly service data
+     */
+    private function validateHourlyData(array $data): void
+    {
+        if (empty($data['duration_hours'])) {
+            throw ValidationException::withMessages([
+                'duration_hours' => ['Booking duration is required for this service type.'],
+            ]);
+        }
     }
 }

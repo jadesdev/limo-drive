@@ -49,8 +49,7 @@ class UpdateBookingRequest extends FormRequest
             'accessible' => ['sometimes', 'boolean'],
             'return_service' => ['sometimes', 'boolean'],
             // pricing
-            'payment' => ['sometimes', 'array'],
-            'payment.method' => ['sometimes', 'string'],
+            'payment_method' => ['sometimes', 'string', Rule::in(['stripe', 'paypal'])],
             'price' => ['sometimes', 'numeric', 'min:0'],
             // additional info
             'notes' => ['nullable', 'string', 'max:1000'],
