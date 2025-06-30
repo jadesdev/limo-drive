@@ -33,7 +33,7 @@ class PaypalGateway implements PaymentGatewayInterface
     {
         $paymentIntent = $this->paypalService->getOrderDetails($paymentIntentId);
 
-        if ($paymentIntent['status'] !== 'APPROVED') {
+        if ($paymentIntent['status'] !== 'APPROVED' || $paymentIntent['status'] !== 'COMPLETED') {
             return [
                 'success' => false,
                 'message' => 'Payment has not been approved yet.',
