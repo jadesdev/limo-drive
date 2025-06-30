@@ -112,7 +112,7 @@ class BookingService
      */
     public function getBookingDetails($id): Booking
     {
-        $query = Booking::with(['fleet', 'latestPayment']);
+        $query = Booking::with(['fleet', 'latestPayment','payments']);
 
         return Str::isUuid($id)
             ? $query->findOrFail($id)

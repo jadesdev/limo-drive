@@ -46,7 +46,7 @@ class AdminBookingController extends Controller
             });
         }
 
-        $bookings = $query->with(['fleet', 'driver', 'payments', 'latestPayment'])->latest()->paginate($perPage);
+        $bookings = $query->with(['fleet', 'driver', 'latestPayment'])->latest()->paginate($perPage);
 
         return $this->paginatedResponse(
             'Bookings retrieved successfully.',
