@@ -61,65 +61,63 @@ class AdminBookingController extends Controller
      */
     public function calendar(Request $request)
     {
-        return Cache::remember('bookings_calendar_' . md5(json_encode($request->query())), now()->addHours(1), function () use ($request) {
-            $validated = $request->validate([
-                /** @example 2025-06-07 */
-                'start_date' => 'required|date_format:Y-m-d',
-                /** @example 2025-07-27 */
-                'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
-                'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
-            ]);
-            $query = Booking::query()
-                ->with(['customer:id,first_name,last_name'])
-                ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);
+        $validated = $request->validate([
+            /** @example 2025-06-07 */
+            'start_date' => 'required|date_format:Y-m-d',
+            /** @example 2025-07-27 */
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
+            'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
+        ]);
+        $query = Booking::query()
+            ->with(['customer:id,first_name,last_name'])
+            ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);
 
-            if (! empty($validated['status'])) {
-                $dbStatus = match ($validated['status']) {
-                    'in_progress' => 'in_progress',
-                    'cancelled' => 'cancelled',
-                    default => $validated['status'],
-                };
+        if (! empty($validated['status'])) {
+            $dbStatus = match ($validated['status']) {
+                'in_progress' => 'in_progress',
+                'cancelled' => 'cancelled',
+                default => $validated['status'],
+            };
 
-                if ($validated['status'] === 'in_progress') {
-                    $query->whereIn('status', ['pending_payment', 'confirmed', 'in_progress']);
-                } else {
-                    $query->where('status', $dbStatus);
-                }
+            if ($validated['status'] === 'in_progress') {
+                $query->whereIn('status', ['pending_payment', 'confirmed', 'in_progress']);
+            } else {
+                $query->where('status', $dbStatus);
             }
+        }
 
-            $bookings = $query->get();
+        $bookings = $query->get();
 
-            $calendarEvents = $bookings->map(function (Booking $booking) {
-                $durationHours = $booking->duration_hours ?? 1;
-                $endTime = $booking->pickup_datetime->copy()->addHours($durationHours);
+        $calendarEvents = $bookings->map(function (Booking $booking) {
+            $durationHours = (float) ($booking->duration_hours ?? 2);
+            $endTime = $booking->pickup_datetime->copy()->addHours($durationHours);
 
-                $color = match ($booking->status) {
-                    'pending_payment' => '#6c757d',
-                    'in_progress' => '#28a745',
-                    'completed' => '#0d6efd',
-                    'cancelled' => '#dc3545',
-                    default => '#ffc107',
-                };
+            $color = match ($booking->status) {
+                'pending_payment' => '#6c757d',
+                'in_progress' => '#28a745',
+                'completed' => '#0d6efd',
+                'cancelled' => '#dc3545',
+                default => '#ffc107',
+            };
 
-                return [
-                    'id' => $booking->id,
-                    'title' => trim(($booking->customer->first_name ?? '') . ' ' . ($booking->customer->last_name ?? 'Guest')),
-                    'start' => $booking->pickup_datetime->toIso8601String(),
-                    'end' => $endTime->toIso8601String(),
-                    'color' => $color,
-                    'meta' => [
-                        'booking_code' => $booking->code,
-                        'status' => $booking->status,
-                        'location' => $booking->pickup_address,
-                    ],
-                ];
-            });
-
-            return $this->dataResponse(
-                'Bookings Calendar.',
-                $calendarEvents
-            );
+            return [
+                'id' => $booking->id,
+                'title' => trim(($booking->customer->first_name ?? '') . ' ' . ($booking->customer->last_name ?? 'Guest')),
+                'start' => $booking->pickup_datetime->toIso8601String(),
+                'end' => $endTime->toIso8601String(),
+                'color' => $color,
+                'meta' => [
+                    'booking_code' => $booking->code,
+                    'status' => $booking->status,
+                    'location' => $booking->pickup_address,
+                ],
+            ];
         });
+
+        return $this->dataResponse(
+            'Bookings Calendar.',
+            $calendarEvents
+        );
     }
 
     /**
