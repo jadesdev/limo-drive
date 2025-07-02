@@ -115,7 +115,7 @@ class PayPalWebhookController extends Controller
 
         Log::info('PayPal order approved', ['order_id' => $orderId]);
         $bookingService = app(BookingPaymentService::class);
-        $success = $bookingService->processWebhook('paypal',$webhookData);
+        $success = $bookingService->processWebhook('paypal', $webhookData);
 
         if ($success) {
             \Log::info('Booking confirmed via webhook', [

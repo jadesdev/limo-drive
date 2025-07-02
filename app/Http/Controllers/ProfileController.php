@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        return $this->dataResponse('User Details', $user);
+        return $this->dataResponse('User Details', UserResource::make($user));
     }
 
     /**
@@ -39,7 +40,7 @@ class ProfileController extends Controller
         $user = $request->user();
         $user->update($validated);
 
-        return $this->successResponse('User updated successfully', $user);
+        return $this->successResponse('User updated successfully', UserResource::make($user));
     }
 
     /**
@@ -55,7 +56,7 @@ class ProfileController extends Controller
         $user->image = $request->file('image')->store('images', 'uploads');
         $user->save();
 
-        return $this->successResponse('Image uploaded successfully', $user);
+        return $this->successResponse('Image uploaded successfully', UserResource::make($user));
     }
 
     /**
@@ -71,6 +72,6 @@ class ProfileController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return $this->successResponse('Password updated successfully');
+        return $this->successResponse('Password updated successfully', UserResource::make($user));
     }
 }

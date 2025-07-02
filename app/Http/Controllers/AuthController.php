@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Dedoc\Scramble\Attributes\Group;
@@ -44,7 +45,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'user' => $user,
+            'user' => UserResource::make($user),
             'token' => $token,
         ], 200);
     }
@@ -75,7 +76,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => UserResource::make($request->user()),
         ], 200);
     }
 
@@ -95,6 +96,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Token refreshed successfully',
+            'user' => UserResource::make($user),
             'token' => $token,
         ], 200);
     }

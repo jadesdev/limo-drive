@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Storage;
 
 class User extends Authenticatable
 {
@@ -50,6 +51,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if ($this->image) {
+            return Storage::disk('uploads')->url($this->image);
+        }
+
+        return null;
     }
 
     public function isAdmin()

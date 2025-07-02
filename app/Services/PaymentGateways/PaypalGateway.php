@@ -4,7 +4,6 @@ namespace App\Services\PaymentGateways;
 
 use App\Models\Booking;
 use App\Services\PayPalService;
-use Log;
 use Str;
 
 class PaypalGateway implements PaymentGatewayInterface
