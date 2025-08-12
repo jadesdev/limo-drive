@@ -31,7 +31,7 @@ class CreateBookingRequest extends FormRequest
             'customer.first_name' => ['required', 'string', 'max:255'],
             'customer.last_name' => ['required', 'string', 'max:255'],
             'customer.email' => ['required', 'email:rfc,dns', 'max:255'],
-            'customer.phone' => ['required', 'string', 'regex:/^\+?[0-9\s\-\(\)]{10,20}$/'],
+            'customer.phone' => ['required', 'string', 'regex:/^(?=(?:\D*\d){10,15}\D*$)\+?[0-9\s\-\(\)]{10,25}$/'],
 
             // Trip Details
             'pickup' => ['required', 'array'],
