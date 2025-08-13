@@ -4,7 +4,11 @@
 
 @section('content')
     <span class="badge badge-primary">New Booking</span>
-    <h2>A new booking has been received and paid for.</h2>
+    @if ($booking->payment_status === 'paid')
+        <h2>A new booking has been received and paid for.</h2>
+    @else
+        <h2>A new booking has been received.</h2>
+    @endif
     <p>Please review the details below and assign a driver if necessary.</p>
 
     <div class="card">
@@ -35,7 +39,17 @@
         </div>
         <div class="detail-item">
             <span class="detail-label">Payment Status:</span>
-            <span class="detail-value">{{ $booking->payment_status }}</span>
+            @php
+                $statusLabels = [
+                    'paid' => 'Paid',
+                    'pending' => 'Pending',
+                    'cash_on_arrival' => 'Cash on Arrival',
+                ];
+            @endphp
+
+            <span class="detail-value">
+                {{ $statusLabels[$booking->payment_status] ?? ucfirst(str_replace('_', ' ', $booking->payment_status)) }}
+            </span>
         </div>
         <div class="detail-item">
             <span class="detail-label">Pickup:</span>
