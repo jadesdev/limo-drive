@@ -8,16 +8,22 @@ use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\Booking\BookingResource;
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Services\BookingPaymentService;
 use App\Services\BookingService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class AdminBookingController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(protected BookingService $bookingService) {}
+    public function __construct(
+        protected BookingService $bookingService,
+        protected BookingPaymentService $bookingPaymentService
+    ) {}
 
     /**
      * Admin booking History
@@ -67,50 +73,68 @@ class AdminBookingController extends Controller
             'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
             'status' => 'nullable|string|in:pending_payment,paid,cancelled,in_progress,completed',
         ]);
-        $query = Booking::query()
-            ->with(['customer:id,first_name,last_name'])
-            ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);
 
-        if (! empty($validated['status'])) {
-            $dbStatus = match ($validated['status']) {
-                'in_progress' => 'in_progress',
-                'cancelled' => 'cancelled',
-                default => $validated['status'],
-            };
+        $cacheKey = 'calendar_events:' . md5(implode('|', $validated));
+        $cacheDuration = now()->addMinutes(10);
 
-            if ($validated['status'] === 'in_progress') {
-                $query->whereIn('status', ['pending_payment', 'confirmed', 'in_progress']);
-            } else {
-                $query->where('status', $dbStatus);
+        $calendarEvents = Cache::remember($cacheKey, $cacheDuration, function () use ($validated) {
+            $query = Booking::query()
+                ->where('payment_status', 'paid')
+                ->select([
+                    'id',
+                    'customer_id',
+                    'code',
+                    'status',
+                    'payment_status',
+                    'payment_method',
+                    'pickup_datetime',
+                    'pickup_address',
+                    'duration_hours',
+                ])
+                ->with(['customer:id,first_name,last_name'])
+                ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);
+
+            if (! empty($validated['status'])) {
+                $dbStatus = match ($validated['status']) {
+                    'in_progress' => 'in_progress',
+                    'cancelled' => 'cancelled',
+                    default => $validated['status'],
+                };
+
+                if ($validated['status'] === 'in_progress') {
+                    $query->whereIn('status', ['pending_payment', 'confirmed', 'in_progress']);
+                } else {
+                    $query->where('status', $dbStatus);
+                }
             }
-        }
 
-        $bookings = $query->get();
+            $bookings = $query->get();
 
-        $calendarEvents = $bookings->map(function (Booking $booking) {
-            $durationHours = (float) ($booking->duration_hours ?? 2);
-            $endTime = $booking->pickup_datetime->copy()->addHours($durationHours);
+            return $bookings->map(function (Booking $booking) {
+                $durationHours = (float) ($booking->duration_hours ?? 2);
+                $endTime = $booking->pickup_datetime->copy()->addHours($durationHours);
 
-            $color = match ($booking->status) {
-                'pending_payment' => '#6c757d',
-                'in_progress' => '#28a745',
-                'completed' => '#0d6efd',
-                'cancelled' => '#dc3545',
-                default => '#ffc107',
-            };
+                $color = match ($booking->status) {
+                    'pending_payment' => '#6c757d',
+                    'in_progress' => '#28a745',
+                    'completed' => '#0d6efd',
+                    'cancelled' => '#dc3545',
+                    default => '#ffc107',
+                };
 
-            return [
-                'id' => $booking->id,
-                'title' => trim(($booking->customer->first_name ?? '') . ' ' . ($booking->customer->last_name ?? 'Guest')),
-                'start' => $booking->pickup_datetime->toIso8601String(),
-                'end' => $endTime->toIso8601String(),
-                'color' => $color,
-                'meta' => [
-                    'booking_code' => $booking->code,
-                    'status' => $booking->status,
-                    'location' => $booking->pickup_address,
-                ],
-            ];
+                return [
+                    'id' => $booking->id,
+                    'title' => trim(($booking->customer->first_name ?? '') . ' ' . ($booking->customer->last_name ?? 'Guest')),
+                    'start' => $booking->pickup_datetime->toIso8601String(),
+                    'end' => $endTime->toIso8601String(),
+                    'color' => $color,
+                    'meta' => [
+                        'booking_code' => $booking->code,
+                        'status' => $booking->status,
+                        'location' => $booking->pickup_address,
+                    ],
+                ];
+            });
         });
 
         return $this->dataResponse(
@@ -194,5 +218,28 @@ class AdminBookingController extends Controller
             'Booking status updated successfully.',
             new BookingResource($booking->fresh()->load('driver'))
         );
+    }
+
+    /**
+     * Mark Booking as Paid (cash, manual)
+     */
+    public function recordPayment(Request $request, Booking $booking): JsonResponse
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $updatedBooking = $this->bookingPaymentService->recordManualPayment($booking, $validated);
+
+            return $this->dataResponse(
+                'Payment recorded successfully.',
+                new BookingResource($updatedBooking->load('driver', 'latestPayment'))
+            );
+        } catch (ValidationException $e) {
+            return $this->errorResponse($e->getMessage(), 409, $e->errors());
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to record payment: ' . $e->getMessage(), 500);
+        }
     }
 }

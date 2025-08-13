@@ -15,7 +15,10 @@ class BookingController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(protected BookingService $bookingService, protected BookingPaymentService $bookingPaymentService) {}
+    public function __construct(
+        protected BookingService $bookingService,
+        protected BookingPaymentService $bookingPaymentService
+    ) {}
 
     /**
      * Step 1: Get price and vehicles.
@@ -39,18 +42,31 @@ class BookingController extends Controller
     public function store(CreateBookingRequest $request)
     {
         $booking = $this->bookingService->createBooking($request->validated());
-        $paymentIntent = $this->bookingPaymentService->createPaymentIntent($booking);
+
+        $bookingData = [
+            'booking_id' => $booking->id,
+            'booking_code' => $booking->code,
+            'price' => $booking->price,
+            'status' => $booking->status,
+            'payment_status' => $booking->payment_status,
+            'payment_method' => $booking->payment_method,
+        ];
+        $paymentMethod = $booking->payment_method;
+        [$message, $paymentIntent] = match ($paymentMethod) {
+            'cash' => [
+                'Booking confirmed successfully. Payment will be collected in cash.',
+                null,
+            ],
+            default => [
+                'Booking created successfully. Please proceed to payment.',
+                $this->bookingPaymentService->createPaymentIntent($booking),
+            ],
+        };
 
         return $this->dataResponse(
-            'Booking created successfully. Please proceed to payment.',
+            $message,
             [
-                'booking' => [
-                    'booking_id' => $booking->id,
-                    'booking_code' => $booking->code,
-                    'price' => $booking->price,
-                    'status' => $booking->status,
-                    'payment_status' => $booking->payment_status,
-                ],
+                'booking' => $bookingData,
                 'payment' => $paymentIntent,
             ],
             201

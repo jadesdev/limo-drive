@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\BookingConfirmed;
 use App\Http\Resources\Booking\DistanceBasedQuoteResource;
 use App\Http\Resources\Booking\HourlyBasedQuoteResource;
 use App\Models\Booking;
@@ -95,13 +96,21 @@ class BookingService
     public function createBooking(array $data): Booking
     {
         $selectedFleetQuote = $this->validateFleetSelection($data);
+        \Log::info($selectedFleetQuote);
         $customer = $this->customerService->findOrCreateCustomer($data['customer'] ?? []);
 
+        if (in_array($data['service_type'], self::DISTANCE_SERVICES)) {
+            $data['duration_hours'] = round($selectedFleetQuote['distance']['minutes'] / 60) ?? 1;
+        }
         $bookingData = $this->buildBookingData($data, $selectedFleetQuote['price'], $customer);
         $booking = Booking::create($bookingData);
 
         if ($customer) {
             $this->customerService->updateCustomerStats($customer);
+        }
+        // notify admin of manual payment
+        if ($data['payment_method'] === 'cash') {
+            event(new BookingConfirmed($booking));
         }
 
         return $booking;
@@ -189,11 +198,15 @@ class BookingService
      */
     private function buildBookingData(array $data, float $price, ?Customer $customer): array
     {
+
+        $isCashPayment = ($data['payment_method'] ?? '') === 'cash';
+        $bookingStatus = $isCashPayment ? 'confirmed' : 'pending_payment';
+
         return [
             'fleet_id' => $data['fleet_id'],
             'service_type' => $data['service_type'],
             'price' => $price,
-            'status' => 'pending_payment',
+            'status' => $bookingStatus,
             'payment_status' => 'unpaid',
             'customer_id' => $customer?->id,
             'pickup_datetime' => $data['pickup']['datetime'],

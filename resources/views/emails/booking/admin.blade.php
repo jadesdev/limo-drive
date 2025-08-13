@@ -30,6 +30,14 @@
             <span class="detail-value">{{ $booking->code }}</span>
         </div>
         <div class="detail-item">
+            <span class="detail-label">Payment Method:</span>
+            <span class="detail-value">{{ $booking->payment_method }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Payment Status:</span>
+            <span class="detail-value">{{ $booking->payment_status }}</span>
+        </div>
+        <div class="detail-item">
             <span class="detail-label">Pickup:</span>
             <span class="detail-value">{{ $booking->pickup_datetime->format('M d, Y @ g:i A') }}</span>
         </div>

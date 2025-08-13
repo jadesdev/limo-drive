@@ -27,8 +27,10 @@ class AdminNewBookingNotification extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $paymentStatus = $this->booking->payment_status === 'paid' ? 'Pre-Paid' : 'Cash on Arrival';
+
         return new Envelope(
-            subject: 'New Booking Received! (#' . $this->booking->code . ')',
+            subject: "[New Booking: {$paymentStatus}] Booking Received #" . $this->booking->code,
         );
     }
 
