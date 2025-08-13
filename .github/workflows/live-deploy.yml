@@ -1,0 +1,26 @@
+name: Deploy Ikengalimo Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Live server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy using SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIVE_IP }}
+          username: ${{ secrets.LIVE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.LIVE_PATH }}
+            git pull origin main
+            composer install --no-dev
+            php artisan migrate --force
+            php artisan optimize:clear
+            php artisan queue:restart
