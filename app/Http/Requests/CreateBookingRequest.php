@@ -48,7 +48,7 @@ class CreateBookingRequest extends FormRequest
             'accessible' => ['sometimes', 'boolean'],
             'return_service' => ['sometimes', 'boolean'],
             // pricing
-            'payment_method' => ['required', 'string', Rule::in(['paypal', 'stripe'])],
+            'payment_method' => ['required', 'string', Rule::in(['paypal', 'stripe', 'cash'])],
             // additional info
             'notes' => ['nullable', 'string', 'max:1000'],
             'duration_hours' => ['required_if:service_type,wedding,event,other', 'nullable', 'integer', 'min:1', 'max:24'],
@@ -99,7 +99,7 @@ class CreateBookingRequest extends FormRequest
 
             // Payment
             'payment_method.required' => 'Payment method is required',
-            'payment_method.in' => 'Invalid payment method: paypal or stripe',
+            'payment_method.in' => 'Invalid payment method: paypal or stripe or cash',
             'price.required' => 'Price is required',
             'price.min' => 'Minimum price is $10',
             'price.max' => 'Maximum price exceeded',

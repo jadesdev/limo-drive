@@ -118,6 +118,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
         Route::put('/{booking}/assign-driver', 'assignDriver');
         Route::put('/{booking}', 'update');
         Route::put('/{booking}/update-status', 'updateStatus');
+        Route::post('/{booking}/record-payment', 'recordPayment');
     });
     // Payments
     Route::apiResource('payments', PaymentController::class);

@@ -8,9 +8,12 @@ use App\Models\Payment;
 use App\Services\PaymentGateways\PaymentGatewayInterface;
 use App\Services\PaymentGateways\PaypalGateway;
 use App\Services\PaymentGateways\StripeGateway;
+use DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use Str;
 
 class BookingPaymentService
 {
@@ -32,6 +35,41 @@ class BookingPaymentService
     }
 
     /**
+     * Manually record a payment for a booking (e.g., cash, bank transfer).
+     */
+    public function recordManualPayment(Booking $booking, array $paymentDetails): Booking
+    {
+        if ($booking->payment_status === 'paid') {
+            throw ValidationException::withMessages([
+                'payment' => 'This booking has already been paid for.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($booking, $paymentDetails) {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'amount' => $booking->price,
+                'currency' => 'usd',
+                'customer_name' => $this->getCustomerName($booking),
+                'customer_email' => $booking->customer?->email,
+                'status' => 'completed',
+                'payment_method' => $booking->payment_method,
+                'gateway_name' => 'manual',
+                'gateway_ref' => 'MNP-' . strtoupper(Str::random(12)),
+                'gateway_payload' => ['notes' => $paymentDetails['notes'] ?? 'Payment recorded by admin.'],
+            ]);
+
+            $booking->update([
+                'payment_status' => 'paid',
+                'status' => 'in_progress',
+            ]);
+
+            return $booking->fresh();
+        });
+    }
+
+
+    /**
      * Confirm payment and update booking status
      */
     public function confirmPayment(string $bookingId, string $paymentIntentId): array
@@ -47,7 +85,6 @@ class BookingPaymentService
             }
 
             return $result;
-
         } catch (Exception $e) {
             Log::error('Payment confirmation failed', [
                 'booking_id' => $bookingId,
@@ -90,7 +127,6 @@ class BookingPaymentService
             ]);
 
             return true;
-
         } catch (Exception $e) {
             Log::error('Webhook payment processing failed', [
                 'gateway' => $gateway,
