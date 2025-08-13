@@ -89,7 +89,7 @@ class AdminBookingController extends Controller
                     'payment_method',
                     'pickup_datetime',
                     'pickup_address',
-                    'duration_hours'
+                    'duration_hours',
                 ])
                 ->with(['customer:id,first_name,last_name'])
                 ->whereBetween('pickup_datetime', [$validated['start_date'], $validated['end_date']]);

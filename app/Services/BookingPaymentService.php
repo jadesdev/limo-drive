@@ -68,7 +68,6 @@ class BookingPaymentService
         });
     }
 
-
     /**
      * Confirm payment and update booking status
      */

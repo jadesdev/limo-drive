@@ -65,7 +65,7 @@ class BookingService
         });
 
         return DistanceBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -86,7 +86,7 @@ class BookingService
         });
 
         return HourlyBasedQuoteResource::collection(
-            $vehicles->map(fn($v) => (object) $v)
+            $vehicles->map(fn ($v) => (object) $v)
         );
     }
 
@@ -96,8 +96,12 @@ class BookingService
     public function createBooking(array $data): Booking
     {
         $selectedFleetQuote = $this->validateFleetSelection($data);
+        \Log::info($selectedFleetQuote);
         $customer = $this->customerService->findOrCreateCustomer($data['customer'] ?? []);
 
+        if (in_array($data['service_type'], self::DISTANCE_SERVICES)) {
+            $data['duration_hours'] = round($selectedFleetQuote['distance']['minutes'] / 60) ?? 1;
+        }
         $bookingData = $this->buildBookingData($data, $selectedFleetQuote['price'], $customer);
         $booking = Booking::create($bookingData);
 
@@ -108,6 +112,7 @@ class BookingService
         if ($data['payment_method'] === 'cash') {
             event(new BookingConfirmed($booking));
         }
+
         return $booking;
     }
 
@@ -196,6 +201,7 @@ class BookingService
 
         $isCashPayment = ($data['payment_method'] ?? '') === 'cash';
         $bookingStatus = $isCashPayment ? 'confirmed' : 'pending_payment';
+
         return [
             'fleet_id' => $data['fleet_id'],
             'service_type' => $data['service_type'],
