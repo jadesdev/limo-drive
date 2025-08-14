@@ -105,9 +105,9 @@ class DashboardService
     private function getBookingSummary(): array
     {
         return [
-            'total' => Booking::count(),
-            'in_rental' => Booking::where('status', 'in_progress')->count(),
-            'upcoming' => Booking::where('status', 'confirmed')
+            'total' => Booking::where('payment_status', 'paid')->count(),
+            'in_rental' => Booking::where('status', 'in_progress')->where('payment_status', 'paid')->count(),
+            'upcoming' => Booking::where('status', 'confirmed')->where('payment_status', 'paid')
                 ->where('pickup_datetime', '>', now())
                 ->count(),
         ];
@@ -118,8 +118,8 @@ class DashboardService
      */
     private function getKpiStats(array $currentRange, array $previousRange): array
     {
-        $currentReservations = Booking::whereBetween('created_at', $currentRange)->count();
-        $previousReservations = Booking::whereBetween('created_at', $previousRange)->count();
+        $currentReservations = Booking::whereBetween('created_at', $currentRange)->where('payment_status', 'paid')->count();
+        $previousReservations = Booking::whereBetween('created_at', $previousRange)->where('payment_status', 'paid')->count();
 
         $currentEarnings = Payment::where('status', 'completed')
             ->whereBetween('created_at', $currentRange)
